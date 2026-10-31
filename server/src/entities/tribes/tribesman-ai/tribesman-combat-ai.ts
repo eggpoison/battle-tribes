@@ -21,15 +21,16 @@ import { calculateAttackEffectiveness } from "../../../../../shared/dist/entity-
 import { InventoryName, Item, getItemAttackInfo, ITEM_TYPE_RECORD, ItemType, ITEM_INFO_RECORD, itemInfoIsBow, RETURN_FROM_BOW_USE_TIME_TICKS, QUIVER_ACCESS_TIME_TICKS, QUIVER_PULL_TIME_TICKS, ARROW_RELEASE_WAIT_TIME_TICKS } from "../../../../../shared/dist/items/items.js";
 import { Settings, PathfindingSettings } from "../../../../../shared/dist/settings.js";
 import { TribeType } from "../../../../../shared/dist/tribes.js";
-import { secondsToTicks, Point, distance, angleToPoint, angle, polarVec2, assert } from "../../../../../shared/dist/utils.js";
+import { secondsToTicks, Point, distance, angleToPoint, angle, polarVec2, assert, getAngleDiff } from "../../../../../shared/dist/utils.js";
 
-const enum Vars {
+const enum Var {
    BOW_LINE_OF_SIGHT_WAIT_TIME = 0.5 * Settings.TICK_RATE,
    EMBRASURE_USE_RADIUS = 40,
    BATTLEAXE_MIN_USE_RANGE = 120,
    BATTLEAXE_IDEAL_USE_RANGE = 260,
    BATTLEAXE_MAX_USE_RANGE = 400,
-   DESIRED_RANGED_ATTACK_DISTANCE = 360
+   DESIRED_RANGED_ATTACK_DISTANCE = 360,
+   BOW_FIRE_ACCURACY = 0.08
 }
 
 // @Incomplete?
@@ -150,10 +151,10 @@ const getNearbyEmbrasureUsePoints = (tribesman: Entity): readonly Point[] => {
    const layer = getEntityLayer(tribesman);
    
    // Add 30 to the range to account for the fact that use points are disconnected from the embrasure positions
-   const minChunkX = Math.max(Math.floor((tribesmanHitbox.box.posX - (Vars.EMBRASURE_USE_RADIUS + 30)) / Settings.CHUNK_UNITS), 0);
-   const maxChunkX = Math.min(Math.floor((tribesmanHitbox.box.posX + (Vars.EMBRASURE_USE_RADIUS + 30)) / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1);
-   const minChunkY = Math.max(Math.floor((tribesmanHitbox.box.posY - (Vars.EMBRASURE_USE_RADIUS + 30)) / Settings.CHUNK_UNITS), 0);
-   const maxChunkY = Math.min(Math.floor((tribesmanHitbox.box.posY + (Vars.EMBRASURE_USE_RADIUS + 30)) / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1);
+   const minChunkX = Math.max(Math.floor((tribesmanHitbox.box.posX - (Var.EMBRASURE_USE_RADIUS + 30)) / Settings.CHUNK_UNITS), 0);
+   const maxChunkX = Math.min(Math.floor((tribesmanHitbox.box.posX + (Var.EMBRASURE_USE_RADIUS + 30)) / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1);
+   const minChunkY = Math.max(Math.floor((tribesmanHitbox.box.posY - (Var.EMBRASURE_USE_RADIUS + 30)) / Settings.CHUNK_UNITS), 0);
+   const maxChunkY = Math.min(Math.floor((tribesmanHitbox.box.posY + (Var.EMBRASURE_USE_RADIUS + 30)) / Settings.CHUNK_UNITS), Settings.WORLD_SIZE_CHUNKS - 1);
 
    const usePoints: Point[] = [];
    for (let chunkY = minChunkY; chunkY <= maxChunkY; chunkY++) {
@@ -171,7 +172,7 @@ const getNearbyEmbrasureUsePoints = (tribesman: Entity): readonly Point[] => {
             const usePointX = entityHitbox.box.posX - 22 * Math.sin(entityHitbox.box.angle);
             const usePointY = entityHitbox.box.posY - 22 * Math.cos(entityHitbox.box.angle);
 
-            if (distance(tribesmanHitbox.box.posX, tribesmanHitbox.box.posY, usePointX, usePointY) <= Vars.EMBRASURE_USE_RADIUS) {
+            if (distance(tribesmanHitbox.box.posX, tribesmanHitbox.box.posY, usePointX, usePointY) <= Var.EMBRASURE_USE_RADIUS) {
                usePoints.push(new Point(usePointX, usePointY));
             }
          }
@@ -336,7 +337,7 @@ export function goKillEntity(tribesman: Entity, huntedEntity: Entity, isAggressi
             muchTooCloseDistance = 0;
          }
          
-         if (isInLineOfSight || (getGameTicks() - tribesmanComponent.lastEnemyLineOfSightTicks) <= Vars.BOW_LINE_OF_SIGHT_WAIT_TIME) {
+         if (isInLineOfSight || (getGameTicks() - tribesmanComponent.lastEnemyLineOfSightTicks) <= Var.BOW_LINE_OF_SIGHT_WAIT_TIME) {
             const distance = getDistanceFromPointToEntity(tribesmanHitbox.box.posX, tribesmanHitbox.box.posY, huntedEntityTransformComponent) - getHumanoidRadius(transformComponent);
             
             let isMuchTooClose = false;
@@ -352,7 +353,8 @@ export function goKillEntity(tribesman: Entity, huntedEntity: Entity, isAggressi
                
                const acceleration = getTribesmanSlowAcceleration(tribesman);
                applyAccelerationFromGround(tribesmanHitbox, polarVec2(acceleration, moveDir));
-            } else if (willStopAtDesiredDistance(tribesmanHitbox, muchTooCloseDistance, distance)) {
+            // @SQUEAM
+            } else if (willStopAtDesiredDistance(tribesmanHitbox, muchTooCloseDistance, distance) && 1+1===1) {
                // much too close, stop charging bow all-together and just run back
 
                const awayDirection = angle(tribesmanHitbox.box.posX - huntedHitbox.box.posX, tribesmanHitbox.box.posY - huntedHitbox.box.posY);
@@ -362,7 +364,8 @@ export function goKillEntity(tribesman: Entity, huntedEntity: Entity, isAggressi
                applyAccelerationFromGround(tribesmanHitbox, polarVec2(acceleration, moveDir));
 
                isMuchTooClose = true;
-            } else if (willStopAtDesiredDistance(tribesmanHitbox, Vars.DESIRED_RANGED_ATTACK_DISTANCE - 20, distance)) {
+            // @SQUEAM
+            } else if (willStopAtDesiredDistance(tribesmanHitbox, Var.DESIRED_RANGED_ATTACK_DISTANCE - 20, distance) && 1+1===1) {
                const backDirection = tribesmanHitbox.box.angle + Math.PI;
                const moveDir = adjustMoveDirectionForFriendlyProximity(tribesman, backDirection);
                
@@ -374,7 +377,9 @@ export function goKillEntity(tribesman: Entity, huntedEntity: Entity, isAggressi
                const moveDir = adjustMoveDirectionForFriendlyProximity(tribesman, forwardDirection);
 
                // If the tribesman will be close enough, move closer
-               const acceleration = getTribesmanSlowAcceleration(tribesman);
+               // @SQUEAM
+               // const acceleration = getTribesmanSlowAcceleration(tribesman);
+               const acceleration = getTribesmanAcceleration(tribesman);
                applyAccelerationFromGround(tribesmanHitbox, polarVec2(acceleration, moveDir));
             }
 
@@ -421,28 +426,31 @@ export function goKillEntity(tribesman: Entity, huntedEntity: Entity, isAggressi
                   drawingLimb.currentActionStartLimbState = startDrawingLimbState;
                   drawingLimb.currentActionEndLimbState = QUIVER_PULL_LIMB_STATE;
                } else if (hotbarLimb.action === LimbAction.chargeBow && hotbarLimb.currentActionElapsedTicks >= hotbarLimb.currentActionDurationTicks) {
-                  // If the bow is fully charged, fire it
-                  useItem(tribesman, selectedItem, InventoryName.hotbar, hotbarLimb.selectedItemSlot);
-   
-                  const holdingLimb = hotbarLimb;
-                  const startHoldingLimbState = getCurrentLimbState(holdingLimb);
-                  
-                  holdingLimb.action = LimbAction.mainArrowReleased;
-                  holdingLimb.currentActionElapsedTicks = 0;
-                  holdingLimb.currentActionDurationTicks = ARROW_RELEASE_WAIT_TIME_TICKS;
-                  holdingLimb.currentActionStartLimbState = copyLimbState(startHoldingLimbState);
-                  holdingLimb.currentActionEndLimbState = copyLimbState(startHoldingLimbState);
-         
-                  const drawingLimb = inventoryUseComponent.getLimbInfo(InventoryName.offhand);
-                  const startDrawingLimbState = getCurrentLimbState(drawingLimb);
-         
-                  drawingLimb.action = LimbAction.arrowReleased;
-                  drawingLimb.currentActionElapsedTicks = 0;
-                  drawingLimb.currentActionDurationTicks = ARROW_RELEASE_WAIT_TIME_TICKS;
-                  // @Garbage
-                  drawingLimb.currentActionStartLimbState = copyLimbState(startDrawingLimbState);
-                  // @Garbage
-                  drawingLimb.currentActionEndLimbState = copyLimbState(startDrawingLimbState);
+                  const dist = getAngleDiff(tribesmanHitbox.box.angle, targetAngle);
+                  if (Math.abs(dist) < Var.BOW_FIRE_ACCURACY) {
+                     // If the bow is fully charged, fire it
+                     useItem(tribesman, selectedItem, InventoryName.hotbar, hotbarLimb.selectedItemSlot);
+      
+                     const holdingLimb = hotbarLimb;
+                     const startHoldingLimbState = getCurrentLimbState(holdingLimb);
+                     
+                     holdingLimb.action = LimbAction.mainArrowReleased;
+                     holdingLimb.currentActionElapsedTicks = 0;
+                     holdingLimb.currentActionDurationTicks = ARROW_RELEASE_WAIT_TIME_TICKS;
+                     holdingLimb.currentActionStartLimbState = copyLimbState(startHoldingLimbState);
+                     holdingLimb.currentActionEndLimbState = copyLimbState(startHoldingLimbState);
+            
+                     const drawingLimb = inventoryUseComponent.getLimbInfo(InventoryName.offhand);
+                     const startDrawingLimbState = getCurrentLimbState(drawingLimb);
+            
+                     drawingLimb.action = LimbAction.arrowReleased;
+                     drawingLimb.currentActionElapsedTicks = 0;
+                     drawingLimb.currentActionDurationTicks = ARROW_RELEASE_WAIT_TIME_TICKS;
+                     // @Garbage
+                     drawingLimb.currentActionStartLimbState = copyLimbState(startDrawingLimbState);
+                     // @Garbage
+                     drawingLimb.currentActionEndLimbState = copyLimbState(startDrawingLimbState);
+                  }
                }
             }
          }
@@ -455,7 +463,7 @@ export function goKillEntity(tribesman: Entity, huntedEntity: Entity, isAggressi
       if (isAggressive && weaponCategory === "battleaxe") {
          // Use the battleaxe if the entity is in the use range
          const distance = getDistanceFromPointToEntity(tribesmanHitbox.box.posX, tribesmanHitbox.box.posY, huntedEntityTransformComponent) - getHumanoidRadius(transformComponent);
-         if (distance >= Vars.BATTLEAXE_MIN_USE_RANGE && distance <= Vars.BATTLEAXE_MAX_USE_RANGE && selectedItem.id !== hotbarLimb.thrownBattleaxeItemID) {
+         if (distance >= Var.BATTLEAXE_MIN_USE_RANGE && distance <= Var.BATTLEAXE_MAX_USE_RANGE && selectedItem.id !== hotbarLimb.thrownBattleaxeItemID) {
             if (hotbarLimb.action !== LimbAction.chargeBattleaxe) {
                hotbarLimb.lastBattleaxeChargeTicks = getGameTicks();
             }
@@ -463,11 +471,11 @@ export function goKillEntity(tribesman: Entity, huntedEntity: Entity, isAggressi
             const targetDir = angle(huntedHitbox.box.posX - tribesmanHitbox.box.posX, huntedHitbox.box.posY - tribesmanHitbox.box.posY);
             turnHitboxToAngle(tribesmanHitbox, targetDir, TRIBESMAN_TURN_SPEED, 0.5, false);
 
-            if (distance > Vars.BATTLEAXE_IDEAL_USE_RANGE + 10) {
+            if (distance > Var.BATTLEAXE_IDEAL_USE_RANGE + 10) {
                // Move closer
                const acceleration = getTribesmanSlowAcceleration(tribesman);
                applyAccelerationFromGround(tribesmanHitbox, polarVec2(acceleration, targetDir));
-            } else if (distance < Vars.BATTLEAXE_IDEAL_USE_RANGE - 10) {
+            } else if (distance < Var.BATTLEAXE_IDEAL_USE_RANGE - 10) {
                // Move futher away
                const acceleration = getTribesmanSlowAcceleration(tribesman);
                const moveDir = targetDir + Math.PI;

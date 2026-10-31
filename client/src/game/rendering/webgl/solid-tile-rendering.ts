@@ -1,6 +1,6 @@
 import { Settings } from "../../../../../shared/src/settings";
 import { getSubtileIndex, NUM_SUBTILE_TYPES, SubtileType } from "../../../../../shared/src/subtiles";
-import { TileType, NUM_TILE_TYPES, TileTypeString, getTileIndexIncludingEdges, getTileX, getTileY } from "../../../../../shared/src/tiles";
+import { TileType, NUM_TILE_TYPES, getTileIndexIncludingEdges, getTileX, getTileY } from "../../../../../shared/src/tiles";
 import { assert } from "../../../../../shared/src/utils";
 import { Bytes } from "../../../../../shared/src/constants";
 import { gl, createWebGLProgram, createTextureArray } from "../../webgl";
@@ -10,6 +10,7 @@ import Layer from "../../Layer";
 import { minVisibleRenderChunkX, maxVisibleRenderChunkX, minVisibleRenderChunkY, maxVisibleRenderChunkY } from "../../camera";
 import { TileUpdateData } from "../../networking/snapshot-processing";
 import { getRenderChunkIndex, getRenderChunkX, getRenderChunkY, RenderChunkVars } from "../../../../../shared/src/render-chunks";
+import { TextureInfoCollection } from "../../textures";
 
 const enum Var {
    ATTRIBUTES_PER_VERTEX = 6
@@ -85,7 +86,7 @@ let wallTileTextureArray: WebGLTexture;
 
 let sizeUniformLocation: WebGLUniformLocation;
 
-export function createSolidTileShaders(): void {
+export function createSolidTileShaders(textureInfoCollection: TextureInfoCollection): void {
    const vertexShaderText = `#version 300 es
    precision mediump float;
    
@@ -233,7 +234,7 @@ export function createSolidTileShaders(): void {
          floorTextureSources.push(textureSource);
       }
    }
-   floorTileTextureArray = createTextureArray(floorTextureSources, 16, 16, 5);
+   floorTileTextureArray = createTextureArray(textureInfoCollection, floorTextureSources, 16, 16, 5);
 
    // Walls
    const wallTextureSources: string[] = [];
@@ -243,7 +244,7 @@ export function createSolidTileShaders(): void {
          wallTextureSources.push(textureSource);
       }
    }
-   wallTileTextureArray = createTextureArray(wallTextureSources, 16, 16, 5);
+   wallTileTextureArray = createTextureArray(textureInfoCollection, wallTextureSources, 16, 16, 5);
 }
 
 const addElementToData = (data: Float32Array, dataOffset: number, x: number, y: number, uvIndex: number, textureIndex: number, temperature: number, humidity: number): void => {
@@ -270,9 +271,7 @@ const setFloorVertexData = (data: Float32Array, layer: Layer, renderChunkX: numb
          const tile = layer.getTile(tileIndex);
 
          const textureIndex = FLOOR_TILE_TO_TEXTURE_ARRAY_INDEX_RECORD[tile.type];
-         if (textureIndex === undefined) {
-            throw new Error(TileTypeString[tile.type]);
-         }
+         assert(textureIndex !== undefined);
          if (textureIndex === null) {
             continue;
          }

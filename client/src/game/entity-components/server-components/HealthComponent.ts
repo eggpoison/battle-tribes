@@ -14,7 +14,7 @@ import { getEntityServerComponentTypes } from "../component-types";
 import { getServerComponentData } from "../component-types";
 import { HealthBar_setHealth } from "../../../ui/game/HealthBar";
 import { registerServerComponentArray } from "../component-registry";
-import { registerDirtyRenderObject } from "../../rendering/render-part-matrices";
+import { markDirtyRenderObject } from "../../rendering/render-part-matrices";
 
 const enum Var {
    /** Amount of seconds that the hit flash occurs for */
@@ -98,7 +98,7 @@ function onTick(entity: Entity): void {
 
    const renderObject = getEntityRenderObject(entity);
    renderObject.recalculateTint();
-   registerDirtyRenderObject(entity, renderObject);
+   markDirtyRenderObject(renderObject);
 
    if (healthComponent.secondsSinceLastHit >= Var.ATTACK_HIT_FLASH_DURATION) {
       HealthComponentArray.queueComponentDeactivate(entity);

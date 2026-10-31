@@ -3,8 +3,7 @@ import { createCanvas, loadImage, Image } from "canvas";
 import fs, { Dirent } from "node:fs";
 import path from "node:path";
 
-// @Incomplete
-interface BaseTextureAtlasInfo {
+export interface TextureAtlasMetadata {
    readonly atlasSize: number;
    /** The widths of all inputted textures, in the original order */
    readonly textureWidths: number[];
@@ -175,18 +174,19 @@ export default function TextureAtlasStitchingPlugin(): Plugin {
          fs.writeFileSync(path.join(outDir, "atlas.png"), pngBuffer);
 
          // Write metadata json
-         const meta = {
+         const meta: TextureAtlasMetadata = {
             atlasSize: atlasSize,
-            textureSources: imageFiles.map(file => path.relative(imageDir, path.join(file.parentPath, file.name))),
             textureWidths: textureWidths,
             textureHeights: textureHeights,
             textureSlotIndexes: textureSlotIndexes,
+            numTextures: textureWidths.length,
             atlasSlotSize: ATLAS_SLOT_SIZE
          };
          fs.writeFileSync(path.join(outDir, "atlas-meta.json"), JSON.stringify(meta));
 
          // Write the const enum file
-         const enumMembers = meta.textureSources.map(src => `  ${textureSourceToEnumMemberName(src)},`).join("\n");
+         const textureSources = imageFiles.map(file => path.relative(imageDir, path.join(file.parentPath, file.name)));
+         const enumMembers = textureSources.map(src => `  ${textureSourceToEnumMemberName(src)},`).join("\n");
           // Remove the final comma
          const enumMembersSane = enumMembers.slice(0, enumMembers.length - 1);
          const enumSource = `// Automatically generated - do not manually edit!\nexport const enum TextureIndex {\n${enumMembersSane}\n}`;

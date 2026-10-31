@@ -1,6 +1,6 @@
 import { Point, polarVec2 } from "../../../shared/src/utils";
 import { getTechTreeGL } from "./rendering/webgl/tech-tree-rendering";
-import { TEXTURE_IMAGE_RECORD } from "./textures";
+import { getTextureImage, TextureInfoCollection } from "./textures";
 import { setGameScreenCanvas } from "../ui/GameScreen";
 
 export const CIRCLE_VERTEX_COUNT = 50;
@@ -223,7 +223,7 @@ export function createTexture(width: number, height: number): WebGLTexture {
    return texture;
 }
 
-export function createTextureArray(textureSources: readonly string[], width: number, height: number, numLevels: number): WebGLTexture {
+export function createTextureArray(textureInfoCollection: TextureInfoCollection, textureSources: readonly string[], width: number, height: number, numLevels: number): WebGLTexture {
    const textureArray = gl.createTexture();
    gl.bindTexture(gl.TEXTURE_2D_ARRAY, textureArray);
    gl.texStorage3D(gl.TEXTURE_2D_ARRAY, numLevels, gl.RGBA8, width, height, textureSources.length);
@@ -234,7 +234,7 @@ export function createTextureArray(textureSources: readonly string[], width: num
    // Set all texture units
    for (let i = 0; i < textureSources.length; i++) {
       const textureSource = textureSources[i];
-      const image = TEXTURE_IMAGE_RECORD[textureSource];
+      const image = getTextureImage(textureInfoCollection, textureSource);
       gl.texSubImage3D(gl.TEXTURE_2D_ARRAY, 0, 0, 0, i, width, height, 1, gl.RGBA, gl.UNSIGNED_BYTE, image);
    }
 

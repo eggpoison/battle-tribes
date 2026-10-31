@@ -3,7 +3,7 @@ import { assert } from "../../../shared/src/utils";
 import { Settings } from "../../../shared/src/settings";
 import { EntityRenderObject } from "./EntityRenderObject";
 import Layer from "./Layer";
-import { cleanEntityRenderParts, entityDataUsesClientInterp, undirtyRenderObject } from "./rendering/render-part-matrices";
+import { cleanEntityRenderParts, unmarkDirtyRenderObject } from "./rendering/render-part-matrices";
 import { calculateRenderDepthFromLayer, getEntityRenderLayer } from "./render-layers";
 import { removeEntitySounds } from "./sound";
 import { currentSnapshot } from "./networking/snapshots";
@@ -30,6 +30,9 @@ export const layers: Layer[] = [];
 let currentLayer: Layer;
 export let surfaceLayer: Layer;
 export let undergroundLayer: Layer;
+
+// Used for render part updating
+const entities: Entity[] = [];
 
 const entityTypes: Partial<Record<Entity, EntityType>> = {};
 const entitySpawnTicks: Partial<Record<Entity, number>> = {};
@@ -74,6 +77,10 @@ export function getEntityRenderObject(entity: Entity): EntityRenderObject {
    return entityRenderObjects[entity];
 }
 
+export function getEntities(): Entity[] {
+   return entities;
+}
+
 export function entityExists(entity: Entity): boolean {
    // Of all of them entityTypes is by far the hottest guh
    //        ^ @Investigate: is this true? is entityTypes actually the fastest to use?
@@ -101,8 +108,7 @@ export function createEntityCreationInfo(entity: Entity, entityComponentData: En
    const renderLayer = getEntityRenderLayer(entityType, entityComponentData);
    const renderHeight = calculateRenderDepthFromLayer(renderLayer, entityComponentData);
 
-   const isClientInterp = entityDataUsesClientInterp(entityComponentData.serverComponentData);
-   const renderObject = new EntityRenderObject(entity, renderLayer, renderHeight, maxNumRenderParts, isClientInterp);
+   const renderObject = new EntityRenderObject(entity, renderLayer, renderHeight, maxNumRenderParts);
 
    // Populate render object
    if (hasIntermediateInfo(entityType)) { // @Hacky optimization for grass pretty much
@@ -141,6 +147,7 @@ export function createEntity(spawnTicks: number, layer: Layer, creationInfo: Ent
       componentArray.addComponent(entity, component);
    }
 
+   entities.push(entity);
    entityTypes[entity] = entityType;
    entitySpawnTicks[entity] = spawnTicks;
    entityLayers[entity] = layer;
@@ -159,7 +166,7 @@ export function createEntity(spawnTicks: number, layer: Layer, creationInfo: Ent
       const renderObject = creationInfo.renderObject;
       // Immediately fill the correct render object, because that is required for adding chunk-rendered entities to the world in addEntityToWorld
       // @HACK: interp!
-      cleanEntityRenderParts(renderObject, 0, 0);
+      cleanEntityRenderParts(renderObject, 0, 0, []);
       layer.addEntityToRendering(entity, renderObject.renderLayer, renderObject.renderHeight);
    }
    
@@ -201,9 +208,7 @@ export function destroyEntity(entity: Entity, isDeath: boolean): void {
    // @Speed: grass will really have near zero sounds...
    removeEntitySounds(entity);
 
-   if (renderObject.renderPartsAreDirty) {
-      undirtyRenderObject(entity, renderObject);
-   }
+   unmarkDirtyRenderObject(renderObject);
    deleteEntityRenderData(renderObject);
    
    // @Incomplete: commenting this out because removed entities should have their lights automatically
@@ -219,6 +224,10 @@ export function destroyEntity(entity: Entity, isDeath: boolean): void {
          componentArray.onRemove(entity);
       }
    }
+
+   const idx = entities.indexOf(entity);
+   assert(idx !== -1);
+   entities.splice(idx, 1);
 
    delete entityTypes[entity];
    delete entitySpawnTicks[entity];

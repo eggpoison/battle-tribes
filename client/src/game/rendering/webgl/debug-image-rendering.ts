@@ -1,7 +1,7 @@
 import { Bytes } from "../../../../../shared/src/constants";
 import { angle } from "../../../../../shared/src/utils";
 import { TransformComponentArray } from "../../entity-components/server-components/TransformComponent";
-import { getTexture } from "../../textures";
+import { getTexture, TextureInfoCollection } from "../../textures";
 import { createWebGLProgram, gl } from "../../webgl";
 import { bindUBOToProgram, UBOBindingIndex } from "../ubos";
 
@@ -11,7 +11,9 @@ const enum Var {
 
 let program: WebGLProgram;
 
-export function createDebugImageShaders(): void {
+let debugSpringTexture: WebGLTexture;
+
+export function createDebugImageShaders(textureInfoCollection: TextureInfoCollection): void {
    const vertexShaderText = `#version 300 es
    precision mediump float;
    
@@ -53,6 +55,8 @@ export function createDebugImageShaders(): void {
 
    program = createWebGLProgram(gl, vertexShaderText, fragmentShaderText);
    bindUBOToProgram(gl, program, UBOBindingIndex.CAMERA);
+
+   debugSpringTexture = getTexture(textureInfoCollection, "debug/spring.png");
 }
 
 export function renderDebugImages(): void {
@@ -103,7 +107,7 @@ export function renderDebugImages(): void {
    gl.uniform1i(textureUniformLocation, 0);
 
    gl.activeTexture(gl.TEXTURE0);
-   gl.bindTexture(gl.TEXTURE_2D, getTexture("debug/spring.png"));
+   gl.bindTexture(gl.TEXTURE_2D, debugSpringTexture);
 
    gl.bindVertexArray(null);
    

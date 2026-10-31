@@ -2,16 +2,17 @@ import { _point, assert, Point } from "../../../shared/src/utils";
 import { halfWindowHeight, halfWindowWidth } from "./webgl";
 import Layer from "./Layer";
 import { entityExists, getCurrentLayer } from "./world";
-import { calculateHitboxRenderPosition } from "./rendering/render-part-matrices";
+import { getHitboxRenderPart, getMatrixPosition } from "./rendering/render-part-matrices";
 import { Hitbox } from "./hitboxes";
 import { TransformComponentArray } from "./entity-components/server-components/TransformComponent";
 import { debugDisplayState } from "../ui-state/debug-display-state";
-import { hoverDebugState } from "../ui-state/hover-debug-state";
-import { Tile } from "./Tile";
 import { Entity } from "../../../shared/src/entities";
 import { Settings } from "../../../shared/src/settings";
-import { tileIsInWorld, getTileIndexIncludingEdges } from "../../../shared/src/tiles";
+import { getTileIndexIncludingEdges } from "../../../shared/src/tiles";
 import { RenderChunkVars } from "../../../shared/src/render-chunks";
+import { EntityDebugData } from "../../../shared/src/client-server-types";
+import { updateDebugInspectorTile } from "../ui/game/dev/tabs/TileInspector";
+import { updateDebugInspectorCursor } from "../ui/game/dev/DebugInspector";
 
 let cameraSubjectHitbox: Hitbox | null = null;
 
@@ -48,7 +49,16 @@ export let maxVisibleRenderChunkY = -1;
 export const cursorScreenPos = new Point(0, 0);
 export const cursorWorldPos = new Point(0, 0);
 
+// @Locations
+// DEV ONLY
+export const cursorEntity = 0;
+export let entityDebugData: EntityDebugData | null = null;
+
 const visibleRenderChunks: number[] = [];
+
+export function setEntityDebugData(data: EntityDebugData | null): void {
+   entityDebugData = data;
+}
 
 // @Incomplete?
 // const registerVisibleChunk = (chunk: Chunk): void => {
@@ -127,23 +137,29 @@ export function getCameraSubject(): Entity | null {
 }
 
 const updateCursorWorldPos = (): void => {
+   const previousX = cursorWorldPos.x;
+   const previousY = cursorWorldPos.y;
+   
+   const previousTileX = Math.floor(cursorWorldPos.x / Settings.TILE_SIZE);
+   const previousTileY = Math.floor(cursorWorldPos.y / Settings.TILE_SIZE);
+
    cursorWorldPos.set(screenToWorldPos(cursorScreenPos));
 
+   if (previousX !== cursorWorldPos.x || previousY !== cursorWorldPos.y) {
+      updateDebugInspectorCursor(cursorWorldPos.x, cursorWorldPos.y);
+   }
+   
    const layer = getCurrentLayer();
    // @Hack? @Cleanup If the player moves their mouse before the layers are initialised, this function is called with currentLayer as undefined.
    if ((layer as Layer | undefined) !== undefined) {
       const tileX = Math.floor(cursorWorldPos.x / Settings.TILE_SIZE);
       const tileY = Math.floor(cursorWorldPos.y / Settings.TILE_SIZE);
 
-      let cursorTargetTile: Tile | null;
-      if (tileIsInWorld(tileX, tileY)) {
+      if ((tileX !== previousTileX || tileY !== previousTileY) && layer.hasTileXY(tileX, tileY)) {
+         const tile = layer.getTileXY(tileX, tileY);
          const tileIndex = getTileIndexIncludingEdges(tileX, tileY);
-         cursorTargetTile = layer.getTile(tileIndex);
-      } else {
-         cursorTargetTile = null;
+         updateDebugInspectorTile(layer, tile, tileX, tileY, tileIndex);
       }
-
-      hoverDebugState.setTile(cursorTargetTile);
    }
 }
 
@@ -163,12 +179,13 @@ export function updateCursorScreenPos(e: MouseEvent): void {
    updateCursorWorldPos();
 }
 
-export function refreshCameraPosition(clientInterp: number, serverInterp: number): void {
+export function refreshCameraPosition(): void {
    if (cameraSubjectHitbox === null) {
       return;
    }
 
-   calculateHitboxRenderPosition(cameraSubjectHitbox, clientInterp, serverInterp);
+   const subjectRenderPart = getHitboxRenderPart(cameraSubjectHitbox);
+   getMatrixPosition(subjectRenderPart.modelMatrix)
    setCameraPosition(_point);
 }
 

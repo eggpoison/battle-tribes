@@ -7,7 +7,7 @@ import { angle, Colour, lerp } from "../../../../../shared/src/utils";
 import ColouredRenderPart from "../../render-parts/ColouredRenderPart";
 import { EntityComponentData, getEntityRenderObject, getEntityType, surfaceLayer } from "../../world";
 import ServerComponentArray from "../ServerComponentArray";
-import { registerDirtyRenderObject } from "../../rendering/render-part-matrices";
+import { markDirtyRenderObject } from "../../rendering/render-part-matrices";
 import { Hitbox } from "../../hitboxes";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { getServerComponentData, getTransformComponentData } from "../component-types";
@@ -258,7 +258,7 @@ function onTick(entity: Entity): void {
    }
 
    const renderObject = getEntityRenderObject(entity);
-   registerDirtyRenderObject(entity, renderObject);
+   markDirtyRenderObject(renderObject);
 }
 
 function onCollision(entity: Entity, collidingEntity: Entity, affectedHitbox: Hitbox, collidingHitbox: Hitbox): void {
@@ -298,5 +298,5 @@ function onCollision(entity: Entity, collidingEntity: Entity, affectedHitbox: Hi
    updateOffsets(layeredRodComponent, entity);
 
    const renderObject = getEntityRenderObject(entity);
-   registerDirtyRenderObject(entity, renderObject);
+   markDirtyRenderObject(renderObject);
 }

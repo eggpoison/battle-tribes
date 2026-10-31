@@ -4,21 +4,21 @@ import { ServerComponentType } from "../../../../shared/src/components";
 import { Settings } from "../../../../shared/src/settings";
 import { _point, assert, getAngleDiff, lerp, Mutable, Point, randAngle, slerp } from "../../../../shared/src/utils";
 import { EntityRenderObject, recalculateRenderObjectVertexData } from "../EntityRenderObject";
-import { createIdentityMatrix, Matrix3x2, matrixMultiplyInPlace } from "./matrices";
+import { Matrix3x2, matrixMultiplyInPlace } from "./matrices";
 import { RenderPart, renderParentIsHitbox } from "../render-parts/render-parts";
 import { renderLayerIsChunkRendered, updateChunkRenderedEntity } from "./webgl/chunked-entity-rendering";
-import { entityExists, getEntityRenderObject } from "../world";
+import { entityExists, getEntities, getEntityRenderObject } from "../world";
 import { getHitboxVelocity, Hitbox } from "../hitboxes";
 import { TransformComponentArray } from "../entity-components/server-components/TransformComponent";
 import { playerInstance } from "../player";
 import { EntitySnapshot } from "../networking/snapshot-processing";
 import { currentSnapshot, nextSnapshot } from "../networking/snapshots";
-import { EntityServerComponentData, getEntityServerComponentTypes, getServerComponentData, getTransformComponentData } from "../entity-components/component-types";
+import { getEntityServerComponentTypes, getServerComponentData } from "../entity-components/component-types";
 import { getRenderPartShakeAmount } from "../render-parts/render-part-shake-amounts";
 
-// @HACK i've only kept this dirty array around for hacky reasons. when i make the rework where the client works off sent render parts this should go away.
-const dirtyClientInterpEntities: Entity[] = [];
-const dirtyServerInterpEntities: Entity[] = [];
+// // @HACK i've only kept this dirty array around for hacky reasons. when i make the rework where the client works off sent render parts this should go away.
+// const dirtyClientInterpEntities: Entity[] = [];
+// const dirtyServerInterpEntities: Entity[] = [];
 
 /* ------------------------ */
 /* Matrix Utility Functions */
@@ -83,43 +83,55 @@ const overrideWithRotationMatrix = (matrix: Matrix3x2, rotation: number): void =
    matrix[5] = 0;
 }
 
-export function registerDirtyRenderObject(entity: Entity, renderObject: EntityRenderObject): void {
-   if (renderObject.renderPartsAreDirty) {
-      return;
-   }
-   renderObject.renderPartsAreDirty = true;
+export function markDirtyRenderObject(renderObject: EntityRenderObject): void {
+   // if (renderObject.isDirty) {
+   //    return;
+   // }
+   renderObject.isDirty = true;
    
-   if (renderObject.isClientInterp) {
-      dirtyClientInterpEntities.push(entity);
-   } else {
-      dirtyServerInterpEntities.push(entity);
-   }
+   // if (renderObject.isClientInterp) {
+   //    dirtyClientInterpEntities.push(entity);
+   // } else {
+   //    dirtyServerInterpEntities.push(entity);
+   // }
 }
 
-export function undirtyRenderObject(entity: Entity, renderObject: EntityRenderObject): void {
-   if (!renderObject.renderPartsAreDirty) {
-      return;
-   }
+export function unmarkDirtyRenderObject(renderObject: EntityRenderObject): void {
+   renderObject.isDirty = false;
 
-   // Don't need to set renderPartsAreDirty to false cuz the entity is being destroyed anyway when this is called
+   // if (!renderObject.isDirty) {
+   //    return;
+   // }
+
+   // // Don't need to set renderPartsAreDirty to false cuz the entity is being destroyed anyway when this is called
    
-   if (renderObject.isClientInterp) {
-      const idx = dirtyClientInterpEntities.indexOf(entity);
-      assert(idx !== -1);
+   // if (renderObject.isClientInterp) {
+   //    const idx = dirtyClientInterpEntities.indexOf(entity);
+   //    assert(idx !== -1);
 
-      // Swap with last element then remove last element
-      const lastEntity = dirtyClientInterpEntities[dirtyClientInterpEntities.length - 1];
-      dirtyClientInterpEntities[idx] = lastEntity;
-      dirtyClientInterpEntities.pop();
-   } else {
-      const idx = dirtyServerInterpEntities.indexOf(entity);
-      assert(idx !== -1);
+   //    // Swap with last element then remove last element
+   //    const lastEntity = dirtyClientInterpEntities[dirtyClientInterpEntities.length - 1];
+   //    dirtyClientInterpEntities[idx] = lastEntity;
+   //    dirtyClientInterpEntities.pop();
+   // } else {
+   //    const idx = dirtyServerInterpEntities.indexOf(entity);
+   //    assert(idx !== -1);
 
-      // Swap with last element then remove last element
-      const lastEntity = dirtyServerInterpEntities[dirtyServerInterpEntities.length - 1];
-      dirtyServerInterpEntities[idx] = lastEntity;
-      dirtyServerInterpEntities.pop();
-   }
+   //    // Swap with last element then remove last element
+   //    const lastEntity = dirtyServerInterpEntities[dirtyServerInterpEntities.length - 1];
+   //    dirtyServerInterpEntities[idx] = lastEntity;
+   //    dirtyServerInterpEntities.pop();
+   // }
+}
+
+export function markFilthyRenderObject(renderObject: EntityRenderObject): void {
+   renderObject.isDirty = true;
+   renderObject.isFilthy = true;
+}
+
+export function unmarkFilthyRenderObject(renderObject: EntityRenderObject): void {
+   renderObject.isDirty = false;
+   renderObject.isFilthy = false;
 }
 
 const recalculateRenderPartModelMatrix = (renderPart: RenderPart): void => {
@@ -279,8 +291,6 @@ const cleanClientInterpRenderObject = (renderObject: EntityRenderObject, clientI
    } else {
       recalculateRenderObjectVertexData(renderObject);
    }
-
-   renderObject.renderPartsAreDirty = false;
 }
 
 const cleanServerInterpRenderObject = (renderObject: EntityRenderObject, serverInterp: number): void => {
@@ -294,33 +304,73 @@ const cleanServerInterpRenderObject = (renderObject: EntityRenderObject, serverI
    } else {
       recalculateRenderObjectVertexData(renderObject);
    }
+}
 
-   renderObject.renderPartsAreDirty = false;
+export function getClientInterpEntities(): Entity[] {
+   if (playerInstance === null) {
+      return [];
+   }
+   
+   const playerTransformComponent = TransformComponentArray.getComponent(playerInstance);
+   const playerHitbox = playerTransformComponent.hitboxes[0];
+   const rootEntity = playerHitbox.rootEntity;
+
+   // @HACK!!! Until non-player entities are being client-predicted like the player, when the player rides one it too must be server interpolated.
+   if (rootEntity !== playerInstance) {
+      return [];
+   } else {
+      return [playerInstance];
+   }
+   
+   // // Find all children from the root
+   // const entities = [rootEntity];
+   // for (let i = 0; i < entities.length; i++) {
+   //    const currentEntity = entities[0];
+      
+   //    const transformComponent = TransformComponentArray.getComponent(currentEntity);
+   //    for (const hitbox of transformComponent.hitboxes) {
+   //       for (const child of hitbox.children) {
+   //          if (!entities.includes(child.entity)) {
+   //             entities.push(child.entity);
+   //          }
+   //       }
+   //    }
+   // }
+   // return entities;
 }
 
 export function updateRenderPartMatrices(clientInterp: number, serverInterp: number): void {
-   for (let i = 0, len = dirtyClientInterpEntities.length; i < len; i++) {
-      const entity = dirtyClientInterpEntities[i];
-      // @Hack? I send entity data even if the entity is removed that tick, so while we have to interpolate to that deleted data, also if currentSnapshot = nextSnapshot then it sometimes tries to interpolate a deleted entity.
-      if (entityExists(entity)) {
-         // @Speed: Would be good to not have to do this at all - and then just store the render objects instead of entities!
-         const renderObject = getEntityRenderObject(entity);
-         cleanClientInterpRenderObject(renderObject, clientInterp);
-      }
-   }
+   // Find all client interp entities 
+   const clientInterpEntities = getClientInterpEntities();
+   for (let i = 0; i < clientInterpEntities.length; i++) {
+      const entity = clientInterpEntities[i];
 
-   for (let i = 0, len = dirtyServerInterpEntities.length; i < len; i++) {
-      const entity = dirtyServerInterpEntities[i];
-      // @Hack? I send entity data even if the entity is removed that tick, so while we have to interpolate to that deleted data, also if currentSnapshot = nextSnapshot then it sometimes tries to interpolate a deleted entity.
-      if (entityExists(entity)) {
-         // @Speed: Would be good to not have to do this at all - and then just store the render objects instead of entities!
-         const renderObject = getEntityRenderObject(entity);
-         cleanServerInterpRenderObject(renderObject, serverInterp);
+      const renderObject = getEntityRenderObject(entity);
+      if (renderObject.isDirty) {
+         cleanClientInterpRenderObject(renderObject, clientInterp);
+         
+         renderObject.isDirty = renderObject.isFilthy;
       }
    }
    
-   dirtyClientInterpEntities.length = 0;
-   dirtyServerInterpEntities.length = 0;
+   const entities = getEntities();
+   for (let i = 0; i < entities.length; i++) {
+      const entity = entities[i];
+      // @Hack? I send entity data even if the entity is removed that tick, so while we have to interpolate to that deleted data, also if currentSnapshot = nextSnapshot then it sometimes tries to interpolate a deleted entity.
+      // really, currentSnapshot should never equal nextSnapshot. Also maybe they should be renamed to previousSnapshot and currentSnapshot. so its less like we're peeking into the future
+      if (entityExists(entity)) {
+         // @SPEED
+         if (!clientInterpEntities.includes(entity)) {
+            // @Speed: Would be good to not have to do this at all - and then just store the render objects instead of entities!
+            const renderObject = getEntityRenderObject(entity);
+            if (renderObject.isDirty) {
+               cleanServerInterpRenderObject(renderObject, serverInterp);
+               
+               renderObject.isDirty = renderObject.isFilthy;
+            }
+         }
+      }
+   }
 }
 
 /* -------------------------------- */
@@ -335,31 +385,22 @@ export function entityUsesClientInterp(entity: Entity): boolean {
    return rootEntity === playerInstance;
 }
 
-// @Cleanup @Hack @Location !!
-export function entityDataUsesClientInterp(serverComponentData: EntityServerComponentData): boolean {
-   const transformComponentData = getTransformComponentData(serverComponentData);
-   
-   const entityHitbox = transformComponentData.hitboxes[0];
-   const rootEntity = entityHitbox.rootEntity;
-   return rootEntity === playerInstance;
-}
-
-export function calculateHitboxRenderPosition(hitbox: Hitbox, clientInterp: number, serverInterp: number): void {
-   // @Garbage!
-   const matrix = createIdentityMatrix();
-
+// @HACK
+export function getHitboxRenderPart(hitbox: Hitbox): RenderPart {
    const renderObject = getEntityRenderObject(hitbox.entity);
-   if (renderObject.isClientInterp) {
-      matrixMultiplyByCalculatedHitbox(hitbox, matrix, clientInterp);
-   } else {
-      matrixMultiplyByInterpolatedHitbox(hitbox, matrix, serverInterp);
-   }
    
-   getMatrixPosition(matrix);
+   // Find the hitbox's render part
+   // @HACK @speed
+   for (const renderPart of renderObject.renderPartsByZIndex) {
+      if (renderPart.parent === hitbox) {
+         return renderPart;
+      }
+   }
+   assert(false);
 }
 
-export function cleanEntityRenderParts(renderObject: EntityRenderObject, clientInterp: number, serverInterp: number): void {
-   if (renderObject.isClientInterp) {
+export function cleanEntityRenderParts(renderObject: EntityRenderObject, clientInterp: number, serverInterp: number, clientInterpEntities: Entity[]): void {
+   if (clientInterpEntities.includes(renderObject.entity)) {
       for (const renderPart of renderObject.rootRenderParts) {
          cleanClientInterpModelMatrix(renderPart, clientInterp);
       }
@@ -370,8 +411,8 @@ export function cleanEntityRenderParts(renderObject: EntityRenderObject, clientI
    }
 }
 
-export function cleanEntityRenderObject(renderObject: EntityRenderObject, clientInterp: number, serverInterp: number): void {
-   if (renderObject.isClientInterp) {
+export function cleanEntityRenderObject(renderObject: EntityRenderObject, clientInterp: number, serverInterp: number, clientInterpEntities: Entity[]): void {
+   if (clientInterpEntities.includes(renderObject.entity)) {
       cleanClientInterpRenderObject(renderObject, clientInterp);
    } else {
       cleanServerInterpRenderObject(renderObject, serverInterp);

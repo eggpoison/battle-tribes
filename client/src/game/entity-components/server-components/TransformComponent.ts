@@ -23,6 +23,7 @@ import Layer from "../../Layer";
 import { readHitboxFromData, updateHitboxFromData, updatePlayerHitboxFromData } from "../../networking/packet-hitboxes";
 import { playerIsLightspeed } from "../../event-handling";
 import { registerServerComponentArray } from "../component-registry";
+import { markFilthyRenderObject, unmarkFilthyRenderObject } from "../../rendering/render-part-matrices";
 
 export interface TransformComponentData {
    readonly traction: number;
@@ -277,27 +278,33 @@ const applyHitboxKinematics = (hitbox: Hitbox): void => {
    const tilePhysicsInfo = TILE_PHYSICS_INFO_RECORD[tile.type];
    const tileFriction = tilePhysicsInfo.friction;
 
-   let velX = hitbox.box.posX - hitbox.previousPosX;
-   let velY = hitbox.box.posY - hitbox.previousPosY;
+   let dx = hitbox.box.posX - hitbox.previousPosX;
+   let dy = hitbox.box.posY - hitbox.previousPosY;
       
    // Air friction
    // @Bug? the tile's friction shouldn't affect air friction?
-   velX *= 1 - tileFriction * Settings.DT_S * 2;
-   velY *= 1 - tileFriction * Settings.DT_S * 2;
+   dx *= 1 - tileFriction * Settings.DT_S * 2;
+   dy *= 1 - tileFriction * Settings.DT_S * 2;
 
    // Ground friction
-   const velocityMagnitudeSq = velX * velX + velY * velY;
+   const velocityMagnitudeSq = dx * dx + dy * dy;
    if (velocityMagnitudeSq > 0) {
       const velocityMagnitude = Math.sqrt(velocityMagnitudeSq);
-      const groundFriction = Math.min(tileFriction, velocityMagnitude);
-      velX -= groundFriction * velX / velocityMagnitude * Settings.DT_S;
-      velY -= groundFriction * velY / velocityMagnitude * Settings.DT_S;
+      if (tileFriction * Settings.DT_S >= velocityMagnitude) {
+         // Do this so that floating point demons don't make it != 0
+         dx = 0;
+         dy = 0;
+      } else {
+         const mult = tileFriction / velocityMagnitude * Settings.DT_S;
+         dx -= dx * mult;
+         dy -= dy * mult;
+      }
    }
    
    // Verlet integration update:
    // new position = current position + (damped implicit velocity) + acceleration * (dt^2)
-   const newX = hitbox.box.posX + velX + hitbox.accelX * Settings.DT_S * Settings.DT_S;
-   const newY = hitbox.box.posY + velY + hitbox.accelY * Settings.DT_S * Settings.DT_S;
+   const newX = hitbox.box.posX + dx + hitbox.accelX * Settings.DT_S * Settings.DT_S;
+   const newY = hitbox.box.posY + dy + hitbox.accelY * Settings.DT_S * Settings.DT_S;
 
    hitbox.previousPosX = hitbox.box.posX;
    hitbox.previousPosY = hitbox.box.posY;
@@ -525,45 +532,48 @@ function onTick(entity: Entity): void {
    const transformComponent = TransformComponentArray.getComponent(entity);
    const hitbox = transformComponent.hitboxes[0];
    if (hitboxIsInWater(hitbox)) {
-      // Water droplet particles
-      // @Hack @Cleanup: Don't hardcode fish condition
-      if (customTickIntervalHasPassed(getEntityAgeTicks(entity), 0.05) && getEntityType(entity) !== EntityType.fish) {
-         createWaterSplashParticle(hitbox.box.posX, hitbox.box.posY);
-      }
+      getHitboxVelocity(hitbox);
+      if (!_point.isZero()) {
+         // Water droplet particles
+         // @Hack @Cleanup: Don't hardcode fish condition
+         if (customTickIntervalHasPassed(getEntityAgeTicks(entity), 0.05) && getEntityType(entity) !== EntityType.fish) {
+            createWaterSplashParticle(hitbox.box.posX, hitbox.box.posY);
+         }
 
-      // Water splash particles
-      // @Cleanup: Move to particles file
-      if (customTickIntervalHasPassed(getEntityAgeTicks(entity), 0.15)) {
-         getHitboxVelocity(hitbox);
-         if (_point.isNonZero() && getEntityType(entity) !== EntityType.fish) {
-            const lifetime = 2.5;
+         // Water splash particles
+         // @Cleanup: Move to particles file
+         if (customTickIntervalHasPassed(getEntityAgeTicks(entity), 0.15)) {
+            getHitboxVelocity(hitbox);
+            if (_point.isNonZero() && getEntityType(entity) !== EntityType.fish) {
+               const lifetime = 2.5;
 
-            const particle = new Particle(lifetime);
-            particle.getOpacity = (): number => {
-               return lerp(0.75, 0, Math.sqrt(particle.age / lifetime));
+               const particle = new Particle(lifetime);
+               particle.getOpacity = (): number => {
+                  return lerp(0.75, 0, Math.sqrt(particle.age / lifetime));
+               }
+               particle.getScale = (): number => {
+                  return 1 + particle.age / lifetime * 1.4;
+               }
+
+               addTexturedParticleToBufferContainer(
+                  particle,
+                  ParticleRenderLayer.low,
+                  64, 64,
+                  hitbox.box.posX, hitbox.box.posY,
+                  0, 0, 
+                  0, 0,
+                  0,
+                  randAngle(),
+                  0,
+                  0,
+                  0,
+                  8 * 1 + 5,
+                  0, 0, 0
+               );
+               lowTexturedParticles.push(particle);
+
+               playSoundOnHitbox("water-splash-" + randInt(1, 3) + ".mp3", 0.25, 1, entity, hitbox, false);
             }
-            particle.getScale = (): number => {
-               return 1 + particle.age / lifetime * 1.4;
-            }
-
-            addTexturedParticleToBufferContainer(
-               particle,
-               ParticleRenderLayer.low,
-               64, 64,
-               hitbox.box.posX, hitbox.box.posY,
-               0, 0, 
-               0, 0,
-               0,
-               randAngle(),
-               0,
-               0,
-               0,
-               8 * 1 + 5,
-               0, 0, 0
-            );
-            lowTexturedParticles.push(particle);
-
-            playSoundOnHitbox("water-splash-" + randInt(1, 3) + ".mp3", 0.25, 1, entity, hitbox, false);
          }
       }
    }
@@ -630,28 +640,24 @@ function updateFromData(data: TransformComponentData, entity: Entity): void {
          hitbox = hitboxData;
       } else {
          updateHitboxFromData(hitbox, hitboxData);
-         // @SQUEAM
-         // if (getEntityType(entity) === EntityType.heldItem) {
-         //    console.log(hitbox.box.angle);
-         // }
       }
 
       getHitboxVelocity(hitbox);
       if (_point.isNonZero()) {
          anyHitboxHasVelocity = true;
-         // @Temporary @Squeam for optimisation
-         const entityType = getEntityType(entity);
-         if (entityType === EntityType.decoration || entityType === EntityType.lilypad || entityType === EntityType.reed) {
-            console.log(hitbox);
-            throw new Error();
-         }
       }
    }
 
    if (anyHitboxHasVelocity) {
       TransformComponentArray.activateComponent(transformComponent, entity);
+
+      const renderObject = getEntityRenderObject(entity);
+      markFilthyRenderObject(renderObject);
    } else if (TransformComponentArray.componentIsActive(entity)) {
       TransformComponentArray.queueComponentDeactivate(entity);
+
+      const renderObject = getEntityRenderObject(entity);
+      unmarkFilthyRenderObject(renderObject);
    }
 
    transformComponent.traction = data.traction;
@@ -694,8 +700,14 @@ function updatePlayerFromData(data: TransformComponentData, isInitialData: boole
    // @Copynpaste
    if (anyHitboxHasVelocity) {
       TransformComponentArray.activateComponent(transformComponent, playerInstance!);
+
+      const renderObject = getEntityRenderObject(playerInstance!);
+      markFilthyRenderObject(renderObject);
    } else if (TransformComponentArray.componentIsActive(playerInstance!)) {
       TransformComponentArray.queueComponentDeactivate(playerInstance!);
+
+      const renderObject = getEntityRenderObject(playerInstance!);
+      unmarkFilthyRenderObject(renderObject);
    }
 
    let canAscendLayer = false;

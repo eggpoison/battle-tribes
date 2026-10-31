@@ -60,7 +60,9 @@ const enum Vars {
 }
 
 const HEIGHT_NOISE_SCALE = 50;
-const TEMPERATURE_NOISE_SCALE = 150;
+// @SQUEAM lowered to previous value for cave shot
+// const TEMPERATURE_NOISE_SCALE = 150;
+const TEMPERATURE_NOISE_SCALE = 100;
 const HUMIDITY_NOISE_SCALE = 30;
 
 export let riverMainTiles: readonly WaterTileGenerationInfo[];

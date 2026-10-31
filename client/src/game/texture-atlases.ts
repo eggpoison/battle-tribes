@@ -1,15 +1,20 @@
 import { gl } from "./webgl";
 
-export interface TextureAtlas {
+// @COPYNPASTE!!! From vite-plugin-texture-atlas
+export interface TextureAtlasMetadata {
    readonly atlasSize: number;
-   readonly textureSources: string[];
+   /** The widths of all inputted textures, in the original order */
    readonly textureWidths: number[];
+   /** The heights of all inputted textures, in the original order */
    readonly textureHeights: number[];
+   /** The indexes of all inputted textures in the texture atlas */
    readonly textureSlotIndexes: number[];
+   /** Number of textures inside the atlas */
+   readonly numTextures: number;
    readonly atlasSlotSize: number;
 }
 
-let textureAtlasInfo: TextureAtlas;
+let textureAtlasInfo: TextureAtlasMetadata;
 
 let entityTextureAtlasTexture: WebGLTexture;
 let techTreeEntityTextureAtlasTexture: WebGLTexture;
@@ -45,7 +50,7 @@ export async function loadTextureAtlas(): Promise<void> {
    gl.bindTexture(gl.TEXTURE_2D, null);
 }
 
-export function getEntityTextureAtlasInfo(): TextureAtlas {
+export function getEntityTextureAtlasInfo(): TextureAtlasMetadata {
    return textureAtlasInfo;
 }
 

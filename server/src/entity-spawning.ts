@@ -1,7 +1,7 @@
 import { calculateBoxBounds, _bounds } from "../../shared/dist/boxes.js";
 import { getEntityCollisionGroup, CollisionGroup } from "../../shared/dist/collision-groups.js";
 import { boxIsCollidingWithSubtile, boxIsCollidingWithTile } from "../../shared/dist/collision.js";
-import { EntityTypeString } from "../../shared/dist/entities.js";
+import { EntityType, EntityTypeString } from "../../shared/dist/entities.js";
 import { Settings } from "../../shared/dist/settings.js";
 import { getSubtileIndex } from "../../shared/dist/subtiles.js";
 import { randAngle, randFloat, distance } from "../../shared/dist/utils.js";
@@ -289,7 +289,7 @@ export function runSpawnAttempt(): void {
    }
 
    // @SQUEAM for horse archer shot
-   return;
+   // return;
 
    // Regular spawning
    for (let i = 0; i < SPAWN_INFOS.length; i++) {

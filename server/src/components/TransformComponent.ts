@@ -468,28 +468,34 @@ const applyHitboxKinematics = (hitbox: Hitbox, transformComponent: TransformComp
    const tilePhysicsInfo = TILE_PHYSICS_INFO_RECORD[tileType];
    const friction = tilePhysicsInfo.friction;
    
-   let velX = posX - hitbox.previousPosX;
-   let velY = posY - hitbox.previousPosY;
+   let dx = posX - hitbox.previousPosX;
+   let dy = posY - hitbox.previousPosY;
 
    // Air friction
    if (transformComponent.isAffectedByAirFriction) {
       // @IncompletE: shouldn't use tile friction!!
-      velX *= 1 - friction * Settings.DT_S * 2;
-      velY *= 1 - friction * Settings.DT_S * 2;
+      dx *= 1 - friction * Settings.DT_S * 2;
+      dy *= 1 - friction * Settings.DT_S * 2;
    }
 
    if (transformComponent.isAffectedByGroundFriction) {
       // Ground friction
-      const velocityMagnitudeSquared = velX * velX + velY * velY;
+      const velocityMagnitudeSquared = dx * dx + dy * dy;
       if (velocityMagnitudeSquared > 0) {
          const velocityMagnitude = Math.sqrt(velocityMagnitudeSquared);
-         const groundFriction = Math.min(friction, velocityMagnitude);
-         velX -= groundFriction * velX / velocityMagnitude * Settings.DT_S;
-         velY -= groundFriction * velY / velocityMagnitude * Settings.DT_S;
+         if (friction * Settings.DT_S >= velocityMagnitude) {
+            // Do this so that floating point demons don't make it != 0
+            dx = 0;
+            dy = 0;
+         } else {
+            const mult = friction / velocityMagnitude * Settings.DT_S;
+            dx -= dx * mult;
+            dy -= dy * mult;
+         }
       }
    }
 
-   if (velX !== 0 || velY !== 0 || hitbox.accelX !== 0 || hitbox.accelY !== 0) {
+   if (dx !== 0 || dy !== 0 || hitbox.accelX !== 0 || hitbox.accelY !== 0) {
       transformComponent.isDirty = true;
    }
    
@@ -498,8 +504,8 @@ const applyHitboxKinematics = (hitbox: Hitbox, transformComponent: TransformComp
 
    // Verlet integration update:
    // new position = current position + (damped implicit velocity) + acceleration * (dt^2)
-   box.posX += velX + hitbox.accelX * Settings.DT_S * Settings.DT_S;
-   box.posY += velY + hitbox.accelY * Settings.DT_S * Settings.DT_S;
+   box.posX += dx + hitbox.accelX * Settings.DT_S * Settings.DT_S;
+   box.posY += dy + hitbox.accelY * Settings.DT_S * Settings.DT_S;
 
    hitbox.accelX = 0;
    hitbox.accelY = 0;

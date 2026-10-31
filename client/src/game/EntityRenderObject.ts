@@ -7,7 +7,7 @@ import { RenderLayer } from "./render-layers";
 import { getEntityLayer, getEntityType } from "./world";
 import { gl } from "./webgl";
 import { createEntityRenderData, setRenderObjectInVertexData } from "./rendering/webgl/entity-rendering";
-import { registerDirtyRenderObject } from "./rendering/render-part-matrices";
+import { markDirtyRenderObject } from "./rendering/render-part-matrices";
 import { renderLayerIsChunkRendered } from "./rendering/webgl/chunked-entity-rendering";
 import { getEntityComponentArrays } from "./entity-components/component-types";
 
@@ -27,7 +27,7 @@ export function createComponentTint(tintR: number, tintG: number, tintB: number)
 
 /** Contains all the information required to render an entity to the screen. */
 export class EntityRenderObject {
-   // @Cleanup @Hack: this is such a hacke (Also if I remove this then i can rename this to RenderObject)
+   // @Cleanup @Memory @Hack: this is such a hacke (Also if I remove this then i can rename this to RenderObject)
    public readonly entity: Entity;
    public readonly renderLayer: RenderLayer;
    public readonly renderHeight: number;
@@ -43,9 +43,10 @@ export class EntityRenderObject {
    /** Amount the entity's render parts will shake */
    public shakeAmount = 0;
 
-   /** Whether or not the entity has changed visually at all since its last dirty check */
-   public renderPartsAreDirty = false;
-   public renderPositionIsDirty = false;
+   /** Whether or not any of the render parts have changed visually at all since its last dirty check */
+   public isDirty = false;
+   /** If true, the entity won't be automatically undirtied after its render info is recalculated. */
+   public isFilthy = false;
 
    public tintR = 0;
    public tintG = 0;
@@ -57,14 +58,11 @@ export class EntityRenderObject {
    public readonly vertexBuffer: WebGLBuffer | null;
    public readonly vertexData: Float32Array | null;
 
-   public isClientInterp: boolean;
-
-   constructor(associatedEntity: Entity, renderLayer: RenderLayer, renderHeight: number, maxRenderParts: number, isClientInterp: boolean) {
+   constructor(associatedEntity: Entity, renderLayer: RenderLayer, renderHeight: number, maxRenderParts: number) {
       this.entity = associatedEntity;
       this.renderLayer = renderLayer;
       this.renderHeight = renderHeight;
       this.maxRenderParts = maxRenderParts;
-      this.isClientInterp = isClientInterp;
 
       if (!renderLayerIsChunkRendered(renderLayer)) {
          const entityRenderData = createEntityRenderData(maxRenderParts);
@@ -110,7 +108,7 @@ export class EntityRenderObject {
          renderPart.parent.children.push(renderPart);
       }
 
-      registerDirtyRenderObject(this.entity, this);
+      markDirtyRenderObject(this);
    }
 
    public removeRenderPart(renderPart: RenderPart): void {

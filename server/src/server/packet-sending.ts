@@ -156,7 +156,7 @@ export function createGameDataPacket(playerClient: PlayerClient, entitiesToSend:
    // @Cleanup: The mined subtile system here exists really only to send particles. Can be entirely encompassed in a server particles system!
 
    const player = entityExists(playerClient.instance) ? playerClient.instance : null;
-   const layer = playerClient.lastLayer;
+   const playerLayer = playerClient.lastLayer;
    
    const tribes = getTribes();
 
@@ -219,6 +219,8 @@ export function createGameDataPacket(playerClient: PlayerClient, entitiesToSend:
    // New render chunks
    lengthBytes += Bytes.Float32;
    for (let i = 0; i < layers.length; i++) {
+      const layer = layers[i];
+      
       const tilesInLayer = 4 * Settings.CHUNK_SIZE * Settings.CHUNK_SIZE * newRenderChunks.length;
       // Tiles
       lengthBytes += tilesInLayer * 7 * Bytes.Float32;
@@ -278,7 +280,7 @@ export function createGameDataPacket(playerClient: PlayerClient, entitiesToSend:
    packet.writeNumber(getGameTicks());
    packet.writeNumber(getGameTime());
 
-   packet.writeNumber(layers.indexOf(layer));
+   packet.writeNumber(layers.indexOf(playerLayer));
 
    // Add entities 
    packet.writeNumber(entitiesToSend.size);
@@ -369,7 +371,10 @@ export function createGameDataPacket(playerClient: PlayerClient, entitiesToSend:
 
    // Data for newly nearby render chunks
    packet.writeNumber(newRenderChunks.length);
+   // @SPEED: only send layers which are visible!
    for (let i = 0; i < layers.length; i++) {
+      const layer = layers[i];
+      
       for (let j = 0; j < newRenderChunks.length; j++) {
          const renderChunk = newRenderChunks[j];
          packet.writeNumber(renderChunk);
@@ -482,10 +487,10 @@ export function createGameDataPacket(playerClient: PlayerClient, entitiesToSend:
    for (const subtileIndex of minedSubtiles) {
       packet.writeNumber(subtileIndex);
 
-      const subtileType = layer.getMinedSubtileType(subtileIndex);
+      const subtileType = playerLayer.getMinedSubtileType(subtileIndex);
       packet.writeNumber(subtileType);
       
-      const support = getSubtileSupport(layer, subtileIndex);
+      const support = getSubtileSupport(playerLayer, subtileIndex);
       packet.writeNumber(support);
 
       packet.writeBool(subtileIsCollapsing(subtileIndex));

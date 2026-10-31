@@ -72,13 +72,15 @@ export function generatePerlinNoise(width: number, height: number, scale: number
    const gridSize = gridWidth * gridHeight * 2;
    
    // const gridSeed = randFloat(0, 10000);
-   const gridSeed = Math.random() * 1000000 + Math.random();
+   // const gridSeed = Math.random() * 1000000 + Math.random();
    const gridCoordinates = new Float32Array(gridSize);
    for (let i = 0; i < gridSize; i += 2) {
       // @HACKE!
       // const degrees = Math.floor(generatePerlinNoise1DContinuous(thung, veryBadHash(i + "")) * 360);
-      const iSeed = murmurHash3(i) / 10000;
-      const degrees = Math.floor(generatePerlinNoise1DContinuous(thung * thungMult, gridSeed + mm + iSeed) * 360);
+
+      // const iSeed = murmurHash3(i) / 10000;
+      // const degrees = Math.floor(generatePerlinNoise1DContinuous(thung * thungMult, gridSeed + mm + iSeed) * 360);
+
       // if(a===0)console.log(i, murmurHash3(i) / 10000, degrees);
       // if (a === 0) {
       //    const noiseOffset = murmurHash3(i);
@@ -117,7 +119,7 @@ export function generatePerlinNoise(width: number, height: number, scale: number
       
       // const degrees = Math.floor(murmurHash3(i) % 360);
       // const degrees = Math.floor((veryBadHash(i + "") + thung) % 360);
-      // const degrees = Math.floor(360 * Math.random());
+      const degrees = Math.floor(360 * Math.random());
       gridCoordinates[i] = cosAngles[degrees];
    }
    a++;
@@ -202,17 +204,18 @@ export function resetPerlinNoiseCache(): void {
    pointPerlinNoiseGrids = {};
 }
 
-const thungMult = 0.004;
+// const thungMult = 0.004;
 
 const calculatePointCornerDotProduct = (grid: Partial<Record<string, Point>>, sampleX: number, sampleY: number, cornerX: number, cornerY: number, thung: number, width: number): number => {
    const key = cornerY + "-" + cornerX; // @Speed
    let corner = grid[key];
    
    if (corner === undefined) {
-      const gridSeed = 0;
-      const i = cornerY * width + cornerX;
-      const iSeed = murmurHash3(i) / 10000;
-      const dir = Math.floor(generatePerlinNoise1DContinuous(thung * thungMult, gridSeed + mm + iSeed) * 360);
+      // const gridSeed = 0;
+      // const i = cornerY * width + cornerX;
+      // const iSeed = murmurHash3(i) / 10000;
+      // const dir = Math.floor(generatePerlinNoise1DContinuous(thung * thungMult, gridSeed + mm + iSeed) * 360);
+      const dir = 2 * Math.PI * Math.random();
       
       corner = new Point(Math.sin(dir), Math.cos(dir));
       grid[key] = corner;

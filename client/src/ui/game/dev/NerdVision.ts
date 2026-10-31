@@ -1,5 +1,6 @@
 import { assert } from "../../../../../shared/src/utils";
 import { openDebugInfoDisplay } from "./DebugInfoDisplay";
+import { createDebugInspector } from "./DebugInspector";
 import { hideFrameGraph, showFrameGraph } from "./FrameGraph";
 import { createTabSelector, destroyTabSelector } from "./TabSelector";
 
@@ -14,6 +15,8 @@ const createNerdVision = (): void => {
 
    openDebugInfoDisplay(rootElem);
    createTabSelector(rootElem);
+
+   createDebugInspector(rootElem);
    
    showFrameGraph();
 

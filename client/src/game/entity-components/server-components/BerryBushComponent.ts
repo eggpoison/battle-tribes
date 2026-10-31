@@ -9,7 +9,7 @@ import ServerComponentArray from "../ServerComponentArray";
 import { TransformComponentArray } from "./TransformComponent";
 import { createLeafParticle, LeafParticleSize, createLeafSpeckParticle } from "../../particles";
 import { playSoundOnHitbox } from "../../sound";
-import { registerDirtyRenderObject } from "../../rendering/render-part-matrices";
+import { markDirtyRenderObject } from "../../rendering/render-part-matrices";
 import { EntityRenderObject } from "../../EntityRenderObject";
 import { getServerComponentData, getTransformComponentData } from "../component-types";
 import { getEntityServerComponentTypes } from "../component-types";
@@ -105,7 +105,7 @@ function updateFromData(data: BerryBushComponentData, entity: Entity): void {
    berryBushComponent.renderPart.switchTextureSource(BERRY_BUSH_TEXTURE_SOURCES[berryBushComponent.numBerries]);
 
    const renderObject = getEntityRenderObject(entity);
-   registerDirtyRenderObject(entity, renderObject);
+   markDirtyRenderObject(renderObject);
 }
 
 function onHit(entity: Entity): void {

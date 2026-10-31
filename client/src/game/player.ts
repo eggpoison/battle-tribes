@@ -1,17 +1,18 @@
 import { Entity } from "../../../shared/src/entities";
 import { TribeType } from "../../../shared/src/tribes";
 import { updateBox } from "../../../shared/src/boxes";
-import { cursorWorldPos } from "./camera";
+import { cursorScreenPos } from "./camera";
 import { selectItemSlot } from "./player-action-handling";
 import { TransformComponentArray } from "./entity-components/server-components/TransformComponent";
 import { setHitboxAngle, setHitboxObservedAngularVelocity } from "./hitboxes";
-import { calculateHitboxRenderPosition, registerDirtyRenderObject } from "./rendering/render-part-matrices";
+import { markDirtyRenderObject } from "./rendering/render-part-matrices";
 import { getEntityRenderObject } from "./world";
 import { gameUIState } from "../ui-state/game-ui-state";
 import { destroyHealthBar } from "../ui/game/HealthBar";
 import { deathScreen } from "../ui-state/death-screen-funcs";
 import { closeCurrentMenu, hasOpenBlockingMenu } from "../ui/menus";
-import { _point } from "../../../shared/src/utils";
+import { angle } from "../../../shared/src/utils";
+import { halfWindowHeight, halfWindowWidth } from "./webgl";
 
 // @Cleanup: THis might literally be able to be removed.. along with this whole file.
 // Doing it this way by importing the value directly (instead of calling a function to get it) will cause some overhead when accessing it,
@@ -65,7 +66,7 @@ export function setPlayerTribeType(tribeType: TribeType): void {
 }
 
 /** Updates the rotation of the player to match the cursor position */
-export function updatePlayerDirection(clientInterp: number, serverInterp: number): void {
+export function updatePlayerDirection(): void {
    if (playerInstance === null) return;
 
    // Don't turn the player if they're meddling about in an inventory, cuz they're not actually looking at stuff while they're doing that
@@ -73,15 +74,17 @@ export function updatePlayerDirection(clientInterp: number, serverInterp: number
       return;
    }
 
+
+   const renderObject = getEntityRenderObject(playerInstance);
+
    const transformComponent = TransformComponentArray.getComponent(playerInstance);
    const playerHitbox = transformComponent.hitboxes[0];
 
-   // Use the render position instead of the hitboxes' actual game position, as that is not up-to-date for the rendered frame.
-   calculateHitboxRenderPosition(playerHitbox, clientInterp, serverInterp);
-
-   const cursorDirection = _point.angleTo(cursorWorldPos);
+   const cursorDirection = angle(cursorScreenPos.x - halfWindowWidth, halfWindowHeight - cursorScreenPos.y);
    
-   const previousAngle = playerHitbox.box.angle;
+   if (Math.abs(cursorDirection - playerHitbox.box.angle) < 0.00001) {
+      return;
+   }
 
    setHitboxAngle(playerHitbox, cursorDirection);
    // We've changed the relative angle, in a weird place where idk if its guaranteed that it will be cleaned in time for it to register correctly.
@@ -98,6 +101,5 @@ export function updatePlayerDirection(clientInterp: number, serverInterp: number
    // @Hack?? hm?
    setHitboxObservedAngularVelocity(playerHitbox, 0);
 
-   const renderObject = getEntityRenderObject(playerInstance);
-   registerDirtyRenderObject(playerInstance, renderObject);
+   markDirtyRenderObject(renderObject);
 }

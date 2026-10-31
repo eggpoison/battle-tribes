@@ -10,11 +10,11 @@ import { getHumanoidRadius } from "./entity-components/server-components/Tribesm
 import { playerInstance } from "./player";
 import { addGhostRenderObject, removeGhostRenderObject } from "./rendering/webgl/entity-ghost-rendering";
 import { TransformComponentArray } from "./entity-components/server-components/TransformComponent";
-import { calculateHitboxRenderPosition } from "./rendering/render-part-matrices";
 import { FloorSignComponentArray } from "./entity-components/server-components/FloorSignComponent";
 import { TamingComponentArray } from "./entity-components/server-components/TamingComponent";
 import { cameraPosition, cameraZoom, cursorWorldPos } from "./camera";
 import { debugDisplayState } from "../ui-state/debug-display-state";
+import { getHitboxRenderPart, getMatrixPosition } from "./rendering/render-part-matrices";
 
 // @Cleanup: The logic for damage, research and heal numbers is extremely similar, can probably be combined
 
@@ -343,7 +343,7 @@ const renderName = (x: number, y: number, name: string, colour: string): void =>
 // @Speed
 // @Speed
 // @Speed
-const renderNames = (clientInterp: number, serverInterp: number): void => {
+const renderNames = (): void => {
    ctx.fillStyle = "#000";
    ctx.font = "400 20px Helvetica";
    ctx.lineJoin = "round";
@@ -361,7 +361,9 @@ const renderNames = (clientInterp: number, serverInterp: number): void => {
 
       const transformComponent = TransformComponentArray.getComponent(entity);
       const hitbox = transformComponent.hitboxes[0];
-      calculateHitboxRenderPosition(hitbox, clientInterp, serverInterp);
+      
+      const renderPart = getHitboxRenderPart(hitbox);
+      getMatrixPosition(renderPart.modelMatrix);
       renderName(_point.x, _point.y + getHumanoidRadius(entity) + 4, tribeMemberComponent.name, getEntityType(entity) === EntityType.player ? "#fff" : "#bbb");
    }
 
@@ -376,7 +378,9 @@ const renderNames = (clientInterp: number, serverInterp: number): void => {
       if (name !== "") {
          const transformComponent = TransformComponentArray.getComponent(entity);
          const hitbox = transformComponent.hitboxes[1];
-         calculateHitboxRenderPosition(hitbox, clientInterp, serverInterp);
+
+         const renderPart = getHitboxRenderPart(hitbox);
+         getMatrixPosition(renderPart.modelMatrix);
          renderName(_point.x, _point.y + 16 + 4, name, "#ccc");
       }
    }
@@ -391,7 +395,9 @@ const renderNames = (clientInterp: number, serverInterp: number): void => {
       
       const transformComponent = TransformComponentArray.getComponent(entity);
       const hitbox = transformComponent.hitboxes[0];
-      calculateHitboxRenderPosition(hitbox, clientInterp, serverInterp);
+      
+      const renderPart = getHitboxRenderPart(hitbox);
+      getMatrixPosition(renderPart.modelMatrix);
       const x = _point.x;
       const y = _point.y;
       
@@ -678,9 +684,9 @@ const renderChunkWeights = (): void => {
    }
 }
 
-export function renderText(clientInterp: number, serverInterp: number): void {
+export function renderText(): void {
    clearTextCanvas();
-   renderNames(clientInterp, serverInterp);
+   renderNames();
    renderDamageNumbers();
    renderResearchNumbers();
    renderHealNumbers();

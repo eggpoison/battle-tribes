@@ -3,6 +3,7 @@ import { Settings } from "../../../../../shared/src/settings";
 import { getSubtileX, getSubtileY } from "../../../../../shared/src/subtiles";
 import { minVisibleX, maxVisibleX, minVisibleY, maxVisibleY } from "../../camera";
 import Layer from "../../Layer";
+import { TextureInfoCollection } from "../../textures";
 import { createWebGLProgram, gl, createTextureArray } from "../../webgl";
 import { bindUBOToProgram, UBOBindingIndex } from "../ubos";
 
@@ -18,7 +19,7 @@ let vao: WebGLVertexArrayObject;
 
 let textureArray: WebGLTexture;
 
-export function createTileBreakProgressShaders(): void {
+export function createTileBreakProgressShaders(textureInfoCollection: TextureInfoCollection): void {
    const vertexShaderText = `#version 300 es
    precision mediump float;
    
@@ -69,7 +70,7 @@ export function createTileBreakProgressShaders(): void {
    gl.uniform1i(samplerUniformLocation, 0);
 
    // Create texture array
-   textureArray = createTextureArray(BREAK_PROGRESS_TEXTURE_SOURCES, 4, 4, 3);
+   textureArray = createTextureArray(textureInfoCollection, BREAK_PROGRESS_TEXTURE_SOURCES, 4, 4, 3);
 }
 
 export function renderTileBreakProgress(layer: Layer): void {

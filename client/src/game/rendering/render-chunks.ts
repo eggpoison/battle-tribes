@@ -1,6 +1,6 @@
 import { Settings } from "../../../../shared/src/settings";
 import { WaterRockData } from "../../../../shared/src/client-server-types";
-import { getTileIndexIncludingEdges, TileIndex, tileIsInWorldIncludingEdges, TileType } from "../../../../shared/src/tiles";
+import { getTileX, getTileY, TileIndex, TileType } from "../../../../shared/src/tiles";
 import { assert } from "../../../../shared/src/utils";
 import { createSolidTileRenderChunkData, destroySolidTileRenderChunkData, updateRenderChunkTileData } from "./webgl/solid-tile-rendering";
 import { createRiverRenderChunkData, destroyRiverRenderChunkData } from "./webgl/river-rendering";
@@ -8,8 +8,8 @@ import { createShadowInfo, destroyShadowInfo, TileShadowType } from "./webgl/til
 import { createWallBorderInfo, destroyWallBorderInfo } from "./webgl/wall-border-rendering";
 import Layer from "../Layer";
 import { layers } from "../world";
-import { addDirtiedRenderChunks, TickSnapshot } from "../networking/snapshot-processing";
-import { getSubtileIndex, getSubtileX, getSubtileY, SubtileIndex, subtileIsInWorldIncludingEdges } from "../../../../shared/src/subtiles";
+import { TickSnapshot } from "../networking/snapshot-processing";
+import { getSubtileX, getSubtileY, SubtileIndex } from "../../../../shared/src/subtiles";
 import { Tile } from "../Tile";
 import { IntermediateInitialisationInfo } from "../networking/packet-receiving";
 import { getRenderChunkIndex, getRenderChunkX, getRenderChunkY, RenderChunkVars } from "../../../../shared/src/render-chunks";
@@ -50,6 +50,7 @@ export const enum EdgeType {
    dropdown
 }
 
+// @Speed: could turn this into a Uint8Array...
 export type RenderChunkEdgeInfo = number[];
 
 export interface RenderChunkShadowInfo {
@@ -67,10 +68,27 @@ export interface RenderChunkWallBorderInfo {
    vertexData: Float32Array;
 }
 
-// @Location should be global
-const NEIGHBOUR_X_OFFSETS = [-1, 0, 1, -1, 1, 0, -1, 1];
-const NEIGHBOUR_Y_OFFSETS = [-1, -1, -1, 0, 1, 1, 1, 0];
-
+const NEIGHBOUR_TILE_OFFSETS = [
+   -Settings.FULL_WORLD_SIZE_TILES - 1, // Bottom left
+   -Settings.FULL_WORLD_SIZE_TILES, // Bottom
+   -Settings.FULL_WORLD_SIZE_TILES + 1, // Bottom right
+   -1, // Left
+   Settings.FULL_WORLD_SIZE_TILES + 1, // Top right
+   Settings.FULL_WORLD_SIZE_TILES, // Top
+   Settings.FULL_WORLD_SIZE_TILES - 1, // Top left
+   1, // Right
+];
+const NEIGHBOUR_SUBTILE_OFFSETS = [
+   -Settings.FULL_WORLD_SIZE_SUBTILES - 1, // Bottom left
+   -Settings.FULL_WORLD_SIZE_SUBTILES, // Bottom
+   -Settings.FULL_WORLD_SIZE_SUBTILES + 1, // Bottom right
+   -1, // Left
+   Settings.FULL_WORLD_SIZE_SUBTILES + 1, // Top right
+   Settings.FULL_WORLD_SIZE_SUBTILES, // Top
+   Settings.FULL_WORLD_SIZE_SUBTILES - 1, // Top left
+   1, // Right
+];
+// (n and n+4 have to be opposite directions)
 const NEIGHBOUR_EDGE_DIRECTIONS = [EdgeMarkerBit.bottomLeft, EdgeMarkerBit.bottom, EdgeMarkerBit.bottomRight, EdgeMarkerBit.left, EdgeMarkerBit.topRight, EdgeMarkerBit.top, EdgeMarkerBit.topLeft, EdgeMarkerBit.right];
 
 export function getRenderChunkRiverInfo(layer: Layer, renderChunkIdx: number): RenderChunkRiverInfo | undefined {
@@ -124,17 +142,18 @@ export function createLayerRenderChunks(layer: Layer, intermediateInfo: Intermed
          const renderChunkIndex = getRenderChunkIndex(renderChunkX, renderChunkY);
          
          const waterRocks = waterRockRenderChunks.get(renderChunkIndex);
-         createRenderChunk(layer, renderChunkIndex, waterRocks);
+         createRenderChunk(layer, renderChunkIndex, waterRocks || []);
 
          // @Hack! so its only added once
          if (layer.idx === 0) {
+            // @Speed: this shouldn't be wrapped in a layers loop
             addRenderChunkToVisibleArray(renderChunkIndex);
          }
       }
    }
 }
 
-export function createRenderChunk(layer: Layer, renderChunkIndex: number, waterRocks: readonly WaterRockData[] | undefined): void {
+export function createRenderChunk(layer: Layer, renderChunkIndex: number, waterRocks: readonly WaterRockData[]): void {
    const renderChunkX = getRenderChunkX(renderChunkIndex);
    const renderChunkY = getRenderChunkY(renderChunkIndex);
    
@@ -143,11 +162,9 @@ export function createRenderChunk(layer: Layer, renderChunkIndex: number, waterR
    layer.wallTileInfoMap.set(renderChunkIndex, createSolidTileRenderChunkData(layer, renderChunkX, renderChunkY, true));
 
    // River info
-   if (waterRocks !== undefined) {
-      const riverInfo = createRiverRenderChunkData(layer, renderChunkX, renderChunkY, waterRocks);
-      if (riverInfo !== null) {
-         layer.riverInfoMap.set(renderChunkIndex, riverInfo);
-      }
+   const riverInfo = createRiverRenderChunkData(layer, renderChunkX, renderChunkY, waterRocks);
+   if (riverInfo !== null) {
+      layer.riverInfoMap.set(renderChunkIndex, riverInfo);
    }
 
    const edgeInfoMaps = layer.edgeInfoMaps;
@@ -203,9 +220,9 @@ export function destroyRenderChunk(layer: Layer, renderChunkIndex: number): void
 
    // Floor shadow info
    const wallShadowInfoMap = layer.tileShadowInfoArrays[TileShadowType.wall];
-   const floorShadowInfo = wallShadowInfoMap.get(renderChunkIndex);
-   if (floorShadowInfo !== undefined) {
-      destroyShadowInfo(floorShadowInfo);
+   const wallShadowInfo = wallShadowInfoMap.get(renderChunkIndex);
+   if (wallShadowInfo !== undefined) {
+      destroyShadowInfo(wallShadowInfo);
       wallShadowInfoMap.delete(renderChunkIndex);
    }
 
@@ -230,7 +247,7 @@ const getSubtileRenderChunkIndex = (subtileX: number, subtileY: number): number 
    return getRenderChunkIndex(renderChunkX, renderChunkY);
 }
 
-const getOrCreateEdgeInfo = (edgeInfos: Map<TileIndex, RenderChunkEdgeInfo>, renderChunkIdx: number): RenderChunkEdgeInfo => {
+const getOrCreateEdgeInfo = (edgeInfos: Map<number, RenderChunkEdgeInfo>, renderChunkIdx: number): RenderChunkEdgeInfo => {
    const edgeInfo = edgeInfos.get(renderChunkIdx);
    if (edgeInfo !== undefined) {
       return edgeInfo;
@@ -242,15 +259,20 @@ const getOrCreateEdgeInfo = (edgeInfos: Map<TileIndex, RenderChunkEdgeInfo>, ren
    }
 }
 
-const addTileEdge = (edgeInfos: Map<TileIndex, RenderChunkEdgeInfo>, tileIndex: TileIndex, tileX: number, tileY: number, marker: EdgeMarkerBit) => {
+const addTileEdge = (edgeInfos: Map<number, RenderChunkEdgeInfo>, tileIndex: TileIndex, marker: EdgeMarkerBit, dirtyRenderChunks: Set<number>) => {
+   const tileX = getTileX(tileIndex);
+   const tileY = getTileY(tileIndex);
+   
    const idx = getTileRenderChunkIndex(tileX, tileY);
    const edgeInfo = getOrCreateEdgeInfo(edgeInfos, idx);
+
+   dirtyRenderChunks.add(idx);
    
    for (let i = 0; i < edgeInfo.length; i++) {
-      const data = edgeInfo[i];
-      const currentIndex = data >> 8;
+      const edgeData = edgeInfo[i];
+      const currentIndex = edgeData >> 8;
       if (currentIndex === tileIndex) {
-         assert((data & marker) === 0);
+         assert((edgeData & marker) === 0);
          edgeInfo[i] |= marker;
          return;
       }
@@ -259,34 +281,47 @@ const addTileEdge = (edgeInfos: Map<TileIndex, RenderChunkEdgeInfo>, tileIndex: 
    edgeInfo.push(tileIndex << 8 | marker);
 }
 
-const addSubtileEdge = (edgeInfos: Map<SubtileIndex, RenderChunkEdgeInfo>, subtileIndex: SubtileIndex, subtileX: number, subtileY: number, marker: EdgeMarkerBit) => {
-   const idx = getSubtileRenderChunkIndex(subtileX, subtileY);
-   const edgeInfo = getOrCreateEdgeInfo(edgeInfos, idx);
+const removeTileEdge = (edgeInfos: Map<number, RenderChunkEdgeInfo>, tileIndex: TileIndex, marker: EdgeMarkerBit, dirtyRenderChunks: Set<number>) => {
+   const tileX = getTileX(tileIndex);
+   const tileY = getTileY(tileIndex);
+   
+   const idx = getTileRenderChunkIndex(tileX, tileY);
+   const edgeInfo = edgeInfos.get(idx)!;
+   
+   dirtyRenderChunks.add(idx);
    
    for (let i = 0; i < edgeInfo.length; i++) {
-      const data = edgeInfo[i];
-      const currentIndex = data >> 8;
-      if (currentIndex === subtileIndex) {
-         assert((data & marker) === 0);
-         edgeInfo[i] |= marker;
+      const edgeData = edgeInfo[i];
+      const currentIndex = edgeData >> 8;
+      if (currentIndex === tileIndex) {
+         assert((edgeData & marker) !== 0);
+         if ((edgeData & 0xFF) === marker) {
+            edgeInfo.splice(i, 1);
+         } else {
+            edgeInfo[i] &= ~marker;
+         }
          return;
       }
    }
-   
-   edgeInfo.push(subtileIndex << 8 | marker);
+
+   // Couldn't find the tile edge to remove
+   assert(false);
 }
 
-const clearSubtileEdges = (edgeInfos: Map<SubtileIndex, RenderChunkEdgeInfo>, subtileIndex: SubtileIndex, subtileX: number, subtileY: number) => {
-   const idx = getSubtileRenderChunkIndex(subtileX, subtileY);
+const clearTileEdges = (edgeInfos: Map<number, RenderChunkEdgeInfo>, tileIndex: TileIndex, tileX: number, tileY: number, dirtyRenderChunks: Set<number>) => {
+   const idx = getTileRenderChunkIndex(tileX, tileY);
+   // Specifically for the TILE clearing function, it doesn't use the edge info. So this is ok to skip
    const edgeInfo = edgeInfos.get(idx);
    
    if (edgeInfo !== undefined) {
       for (let i = 0; i < edgeInfo.length; i++) {
-         const data = edgeInfo[i];
-         const currentIndex = data >> 8;
-         if (currentIndex === subtileIndex) {
-            assert((data & 0xFF) !== 0);
+         const edgeData = edgeInfo[i];
+         const currentIndex = edgeData >> 8;
+         if (currentIndex === tileIndex) {
+            assert((edgeData & 0xFF) !== 0);
             edgeInfo.splice(i, 1);
+
+            dirtyRenderChunks.add(idx);
             return;
          }
       }
@@ -295,16 +330,43 @@ const clearSubtileEdges = (edgeInfos: Map<SubtileIndex, RenderChunkEdgeInfo>, su
    // Ok to not find any edges to clear, as if this is called in the middle of a clump of walls then that will be the case.
 }
 
-const removeSubtileEdge = (edgeInfos: Map<SubtileIndex, RenderChunkEdgeInfo>, subtileIndex: SubtileIndex, subtileX: number, subtileY: number, marker: EdgeMarkerBit) => {
+const addSubtileEdge = (edgeInfos: Map<number, RenderChunkEdgeInfo>, subtileIndex: SubtileIndex, marker: EdgeMarkerBit, dirtyRenderChunks: Set<number>) => {
+   const subtileX = getSubtileX(subtileIndex);
+   const subtileY = getSubtileY(subtileIndex);
+   
+   const idx = getSubtileRenderChunkIndex(subtileX, subtileY);
+   const edgeInfo = getOrCreateEdgeInfo(edgeInfos, idx);
+
+   dirtyRenderChunks.add(idx);
+   
+   for (let i = 0; i < edgeInfo.length; i++) {
+      const edgeData = edgeInfo[i];
+      const currentIndex = edgeData >> 8;
+      if (currentIndex === subtileIndex) {
+         assert((edgeData & marker) === 0);
+         edgeInfo[i] |= marker;
+         return;
+      }
+   }
+   
+   edgeInfo.push(subtileIndex << 8 | marker);
+}
+
+const removeSubtileEdge = (edgeInfos: Map<number, RenderChunkEdgeInfo>, subtileIndex: SubtileIndex, marker: EdgeMarkerBit, dirtyRenderChunks: Set<number>) => {
+   const subtileX = getSubtileX(subtileIndex);
+   const subtileY = getSubtileY(subtileIndex);
+   
    const idx = getSubtileRenderChunkIndex(subtileX, subtileY);
    const edgeInfo = edgeInfos.get(idx)!;
 
+   dirtyRenderChunks.add(idx);
+
    for (let i = 0; i < edgeInfo.length; i++) {
-      const data = edgeInfo[i];
-      const currentIndex = data >> 8;
+      const edgeData = edgeInfo[i];
+      const currentIndex = edgeData >> 8;
       if (currentIndex === subtileIndex) {
-         assert((data & marker) !== 0);
-         if ((data & 0xFF) === marker) {
+         assert((edgeData & marker) !== 0);
+         if ((edgeData & 0xFF) === marker) {
             edgeInfo.splice(i, 1);
          } else {
             edgeInfo[i] &= ~marker;
@@ -317,75 +379,159 @@ const removeSubtileEdge = (edgeInfos: Map<SubtileIndex, RenderChunkEdgeInfo>, su
    assert(false);
 }
 
-export function addSubtileToEdgeInfosPartial(wallSubtileDatas: Map<SubtileIndex, number>, floorEdgeInfos: Map<number, RenderChunkEdgeInfo>, wallEdgeInfos: Map<number, RenderChunkEdgeInfo>, subtileIndex: number, subtileX: number, subtileY: number, subtileData: number): void {
-   for (let i = 0; i < 4; i++) {
-      const xOffset = NEIGHBOUR_X_OFFSETS[i];
-      const yOffset = NEIGHBOUR_Y_OFFSETS[i];
+const clearSubtileEdges = (edgeInfos: Map<number, RenderChunkEdgeInfo>, subtileIndex: SubtileIndex, subtileX: number, subtileY: number, dirtyRenderChunks: Set<number>) => {
+   const idx = getSubtileRenderChunkIndex(subtileX, subtileY);
+   const edgeInfo = edgeInfos.get(idx);
+   
+   if (edgeInfo !== undefined) {
+      for (let i = 0; i < edgeInfo.length; i++) {
+         const edgeData = edgeInfo[i];
+         const currentIndex = edgeData >> 8;
+         if (currentIndex === subtileIndex) {
+            assert((edgeData & 0xFF) !== 0);
+            edgeInfo.splice(i, 1);
 
-      if (subtileIsInWorldIncludingEdges(subtileX + xOffset, subtileY + yOffset)) {
-         const neighbourSubtileIndex = getSubtileIndex(subtileX + xOffset, subtileY + yOffset);
-         const neighbourSubtileData = wallSubtileDatas.get(neighbourSubtileIndex);
-         if (neighbourSubtileData !== undefined && (neighbourSubtileData === 0) !== (subtileData === 0)) {
-            addSubtileEdge(subtileData === 0 ? floorEdgeInfos : wallEdgeInfos, subtileIndex, subtileX, subtileY, NEIGHBOUR_EDGE_DIRECTIONS[i]);
-            addSubtileEdge(neighbourSubtileData === 0 ? floorEdgeInfos : wallEdgeInfos, neighbourSubtileIndex, subtileX + xOffset, subtileY + yOffset, NEIGHBOUR_EDGE_DIRECTIONS[i + 4]);
+            dirtyRenderChunks.add(idx);
+            return;
          }
+      }
+   }
+
+   // Ok to not find any edges to clear, as if this is called in the middle of a clump of walls then that will be the case.
+}
+
+const getSubtileEdgeData = (edgeInfos: Map<number, RenderChunkEdgeInfo>, subtileIndex: SubtileIndex): number | null => {
+   const subtileX = getSubtileX(subtileIndex);
+   const subtileY = getSubtileY(subtileIndex);
+   
+   const idx = getSubtileRenderChunkIndex(subtileX, subtileY);
+   const edgeInfo = edgeInfos.get(idx);
+   if (edgeInfo === undefined) {
+      return null;
+   }
+
+   for (let i = 0; i < edgeInfo.length; i++) {
+      const edgeData = edgeInfo[i];
+      assert((edgeData & 0xFF) !== 0);
+
+      const currentIndex = edgeData >> 8;
+      if (currentIndex === subtileIndex) {
+         return edgeData;
+      }
+   }
+
+   return null;
+}
+
+export function addSubtileToEdgeInfosPartial(wallSubtileDatas: Map<SubtileIndex, number>, floorEdgeInfos: Map<number, RenderChunkEdgeInfo>, wallEdgeInfos: Map<number, RenderChunkEdgeInfo>, subtileIndex: number, subtileData: number, dirtyRenderChunks: Set<number>): void {
+   for (let i = 0; i < 4; i++) {
+      const offset = NEIGHBOUR_SUBTILE_OFFSETS[i];
+      // Ok to not check if the subtile is in the world, as wrapping around isn't harmful
+      const neighbourSubtileIndex = subtileIndex + offset;
+
+      const neighbourSubtileData = wallSubtileDatas.get(neighbourSubtileIndex);
+      if (neighbourSubtileData !== undefined && (neighbourSubtileData === 0) !== (subtileData === 0)) {
+         addSubtileEdge(subtileData === 0 ? floorEdgeInfos : wallEdgeInfos, subtileIndex, NEIGHBOUR_EDGE_DIRECTIONS[i], dirtyRenderChunks);
+         addSubtileEdge(neighbourSubtileData === 0 ? floorEdgeInfos : wallEdgeInfos, neighbourSubtileIndex, NEIGHBOUR_EDGE_DIRECTIONS[i + 4], dirtyRenderChunks);
       }
    }
 }
 
 /** Adds a subtile which currently has zero presence to the edge infos. */
-export function addSubtileToEdgeInfos(wallSubtileDatas: Map<SubtileIndex, number>, floorEdgeInfos: Map<number, RenderChunkEdgeInfo>, wallEdgeInfos: Map<number, RenderChunkEdgeInfo>, subtileIndex: number, subtileX: number, subtileY: number, subtileData: number): void {
+export function addSubtileToEdgeInfos(wallSubtileDatas: Map<SubtileIndex, number>, floorEdgeInfos: Map<number, RenderChunkEdgeInfo>, wallEdgeInfos: Map<number, RenderChunkEdgeInfo>, subtileIndex: number, subtileData: number, dirtyRenderChunks: Set<number>): void {
    for (let i = 0; i < 8; i++) {
-      const xOffset = NEIGHBOUR_X_OFFSETS[i];
-      const yOffset = NEIGHBOUR_Y_OFFSETS[i];
+      const offset = NEIGHBOUR_SUBTILE_OFFSETS[i];
+      // Ok to not check if the subtile is in the world, as wrapping around isn't harmful
+      const neighbourSubtileIndex = subtileIndex + offset;
 
-      if (subtileIsInWorldIncludingEdges(subtileX + xOffset, subtileY + yOffset)) {
-         const neighbourSubtileIndex = getSubtileIndex(subtileX + xOffset, subtileY + yOffset);
-         const neighbourSubtileData = wallSubtileDatas.get(neighbourSubtileIndex);
-         if (neighbourSubtileData !== undefined && (neighbourSubtileData === 0) !== (subtileData === 0)) {
-            // Adds for both the wall tile AND its neighbour, so that already existing tiles get added to
-            addSubtileEdge(subtileData === 0 ? floorEdgeInfos : wallEdgeInfos, subtileIndex, subtileX, subtileY, NEIGHBOUR_EDGE_DIRECTIONS[i]);
-            addSubtileEdge(neighbourSubtileData === 0 ? floorEdgeInfos : wallEdgeInfos, neighbourSubtileIndex, subtileX + xOffset, subtileY + yOffset, NEIGHBOUR_EDGE_DIRECTIONS[(i + 4) % 8]);
-         }
+      const neighbourSubtileData = wallSubtileDatas.get(neighbourSubtileIndex);
+      if (neighbourSubtileData !== undefined && (neighbourSubtileData === 0) !== (subtileData === 0)) {
+         // Adds for both the wall tile AND its neighbour, so that already existing tiles get added to
+         addSubtileEdge(subtileData === 0 ? floorEdgeInfos : wallEdgeInfos, subtileIndex, NEIGHBOUR_EDGE_DIRECTIONS[i], dirtyRenderChunks);
+         addSubtileEdge(neighbourSubtileData === 0 ? floorEdgeInfos : wallEdgeInfos, neighbourSubtileIndex, NEIGHBOUR_EDGE_DIRECTIONS[(i + 4) & 7], dirtyRenderChunks);
       }
    }
 }
 
 // Removes a subtile, which might be a wall or not, from the edge infos.
-export function removeSubtileFromEdgeInfos(wallSubtileDatas: Map<SubtileIndex, number>, floorEdgeInfos: Map<number, RenderChunkEdgeInfo>, wallEdgeInfos: Map<number, RenderChunkEdgeInfo>, subtileIndex: number, subtileX: number, subtileY: number, subtileData: number): void {
-   // IMPORTANT: subtileData has to be the data currently represented in the edge infos.'
+export function removeSubtileFromEdgeInfos(floorEdgeInfos: Map<number, RenderChunkEdgeInfo>, wallEdgeInfos: Map<number, RenderChunkEdgeInfo>, subtileIndex: number, subtileData: number, dirtyRenderChunks: Set<number>): void {
+   // IMPORTANT: subtileData has to be the data currently represented in the edge infos.
+
+   const edgeData = getSubtileEdgeData(subtileData === 0 ? floorEdgeInfos : wallEdgeInfos, subtileIndex);
+   if (edgeData === null) {
+      return;
+   }
    
-   clearSubtileEdges(floorEdgeInfos, subtileIndex, subtileX, subtileY);
-   clearSubtileEdges(wallEdgeInfos, subtileIndex, subtileX, subtileY);
-
+   // Use the subtile's edge data to figure out which neighbours to remove from
    for (let i = 0; i < 8; i++) {
-      const xOffset = NEIGHBOUR_X_OFFSETS[i];
-      const yOffset = NEIGHBOUR_Y_OFFSETS[i];
+      const dir = NEIGHBOUR_EDGE_DIRECTIONS[i];
+      if ((edgeData & dir) !== 0) {
+         const offset = NEIGHBOUR_SUBTILE_OFFSETS[i];
+         // Ok to not check if the subtile is in the world, as wrapping around isn't harmful
+         const neighbourSubtileIndex = subtileIndex + offset;
 
-      if (subtileIsInWorldIncludingEdges(subtileX + xOffset, subtileY + yOffset)) {
-         const neighbourSubtileIndex = getSubtileIndex(subtileX + xOffset, subtileY + yOffset);
-         const neighbourSubtileData = wallSubtileDatas.get(neighbourSubtileIndex);
-         if (neighbourSubtileData !== undefined && (neighbourSubtileData === 0) !== (subtileData === 0)) {
-            removeSubtileEdge(neighbourSubtileData === 0 ? floorEdgeInfos : wallEdgeInfos, neighbourSubtileIndex, subtileX + xOffset, subtileY + yOffset, NEIGHBOUR_EDGE_DIRECTIONS[(i + 4) % 8]);
+         const neighbourDir = NEIGHBOUR_EDGE_DIRECTIONS[(i + 4) & 7];
+         removeSubtileEdge(subtileData !== 0 ? floorEdgeInfos : wallEdgeInfos, neighbourSubtileIndex, neighbourDir, dirtyRenderChunks);
+      }
+   }
+   
+   // Clear the subtile once we've used its data
+   const subtileX = getSubtileX(subtileIndex);
+   const subtileY = getSubtileY(subtileIndex);
+   clearSubtileEdges(floorEdgeInfos, subtileIndex, subtileX, subtileY, dirtyRenderChunks);
+   clearSubtileEdges(wallEdgeInfos, subtileIndex, subtileX, subtileY, dirtyRenderChunks);
+}
+
+export function addTileToEdgeInfosPartial(tiles: Map<TileIndex, Tile>, dropdownEdgeInfos: Map<number, RenderChunkEdgeInfo>, tileIndex: number, tileType: TileType, dirtyRenderChunks: Set<number>): void {
+   for (let i = 0; i < 4; i++) {
+      const offset = NEIGHBOUR_TILE_OFFSETS[i];
+      // Ok to not check if the subtile is in the world, as wrapping around isn't harmful
+      const neighbourTileIndex = tileIndex + offset;
+
+      const neighbourTile = tiles.get(neighbourTileIndex);
+      if (neighbourTile !== undefined && (neighbourTile.type === TileType.dropdown) !== (tileType === TileType.dropdown)) {
+         if (tileType === TileType.dropdown) {
+            addTileEdge(dropdownEdgeInfos, tileIndex, NEIGHBOUR_EDGE_DIRECTIONS[i], dirtyRenderChunks);
+         } else {
+            addTileEdge(dropdownEdgeInfos, neighbourTileIndex, NEIGHBOUR_EDGE_DIRECTIONS[i + 4], dirtyRenderChunks);
          }
       }
    }
 }
 
-export function addTileToEdgeInfos(tiles: Map<TileIndex, Tile>, dropdownEdgeInfos: Map<number, RenderChunkEdgeInfo>, tileIndex: number, tileX: number, tileY: number, tileType: TileType): void {
-   for (let i = 0; i < 4; i++) {
-      const xOffset = NEIGHBOUR_X_OFFSETS[i];
-      const yOffset = NEIGHBOUR_Y_OFFSETS[i];
+export function addTileToEdgeInfos(tiles: Map<TileIndex, Tile>, dropdownEdgeInfos: Map<number, RenderChunkEdgeInfo>, tileIndex: number, tileType: TileType, dirtyRenderChunks: Set<number>): void {
+   for (let i = 0; i < 8; i++) {
+      const offset = NEIGHBOUR_TILE_OFFSETS[i];
+      // Ok to not check if the subtile is in the world, as wrapping around isn't harmful
+      const neighbourTileIndex = tileIndex + offset;
 
-      if (tileIsInWorldIncludingEdges(tileX + xOffset, tileY + yOffset)) {
-         const neighbourTileIndex = getTileIndexIncludingEdges(tileX + xOffset, tileY + yOffset);
+      const neighbourTile = tiles.get(neighbourTileIndex);
+      if (neighbourTile !== undefined && (neighbourTile.type === TileType.dropdown) !== (tileType === TileType.dropdown)) {
+         if (tileType === TileType.dropdown) {
+            addTileEdge(dropdownEdgeInfos, tileIndex, NEIGHBOUR_EDGE_DIRECTIONS[i], dirtyRenderChunks);
+         } else {
+            addTileEdge(dropdownEdgeInfos, neighbourTileIndex, NEIGHBOUR_EDGE_DIRECTIONS[(i + 4) & 7], dirtyRenderChunks);
+         }
+      }
+   }
+}
+
+export function removeTileFromEdgeInfos(tiles: Map<TileIndex, Tile>, dropdownEdgeInfos: Map<number, RenderChunkEdgeInfo>, tileIndex: number, tileType: TileType, dirtyRenderChunks: Set<number>): void {
+   // IMPORTANT: tileType has to be the data currently represented in the edge infos.
+
+   const tileX = getTileX(tileIndex);
+   const tileY = getTileY(tileIndex);
+   clearTileEdges(dropdownEdgeInfos, tileIndex, tileX, tileY, dirtyRenderChunks);
+   if (tileType !== TileType.dropdown) {
+
+      for (let i = 0; i < 8; i++) {
+         const offset = NEIGHBOUR_TILE_OFFSETS[i];
+         // Ok to not check if the subtile is in the world, as wrapping around isn't harmful
+         const neighbourTileIndex = tileIndex + offset;
+         
          const neighbourTile = tiles.get(neighbourTileIndex);
-         if (neighbourTile !== undefined && (neighbourTile.type === TileType.dropdown) !== (tileType === TileType.dropdown)) {
-            if (tileType === TileType.dropdown) {
-               addTileEdge(dropdownEdgeInfos, tileIndex, tileX, tileY, NEIGHBOUR_EDGE_DIRECTIONS[i]);
-            } else {
-               addTileEdge(dropdownEdgeInfos, neighbourTileIndex, tileX + xOffset, tileY + yOffset, NEIGHBOUR_EDGE_DIRECTIONS[(i + 4) % 8]);
-            }
+         if (neighbourTile !== undefined && neighbourTile.type === TileType.dropdown) {
+            removeTileEdge(dropdownEdgeInfos, neighbourTileIndex, NEIGHBOUR_EDGE_DIRECTIONS[(i + 4) & 7], dirtyRenderChunks);
          }
       }
    }
@@ -414,10 +560,8 @@ export function processRenderChunkSubtileUpdates(snapshot: TickSnapshot, layerDi
          const renderChunkIdx = getSubtileRenderChunkIndex(subtileX, subtileY);
          dirtiedSolidTileRenderChunks.add(renderChunkIdx);
 
-         removeSubtileFromEdgeInfos(layer.wallSubtileDatas, floorEdgeInfos, wallEdgeInfos, subtileIndex, subtileX, subtileY, previousSubtileData);
-         addSubtileToEdgeInfos(layer.wallSubtileDatas, floorEdgeInfos, wallEdgeInfos, subtileIndex, subtileX, subtileY, data);
-         
-         addDirtiedRenderChunks(dirtiedEdgeRenderChunks, floorEdgeInfos, wallEdgeInfos, subtileX, subtileY);
+         removeSubtileFromEdgeInfos(floorEdgeInfos, wallEdgeInfos, subtileIndex, previousSubtileData, dirtiedEdgeRenderChunks);
+         addSubtileToEdgeInfos(layer.wallSubtileDatas, floorEdgeInfos, wallEdgeInfos, subtileIndex, data, dirtiedEdgeRenderChunks);
       }
 
       // Recalculate solid tile rendering

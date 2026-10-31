@@ -4,7 +4,7 @@ import { Box, boxIsCircular, HitboxCollisionType, HitboxFlagBit, HitboxTag } fro
 import { Settings } from "../../../shared/src/settings";
 import { _point, distance, distBetweenPointAndRectangle, getAngleDiff, Mutable, Point, randAngle, randFloat, randSign, rotatePointAroundOrigin } from "../../../shared/src/utils";
 import { getEntityLayer, getEntityRenderObject } from "./world";
-import { registerDirtyRenderObject } from "./rendering/render-part-matrices";
+import { markDirtyRenderObject } from "./rendering/render-part-matrices";
 import { Tile } from "./Tile";
 import { getTileIndexIncludingEdges } from "../../../shared/src/tiles";
 
@@ -161,17 +161,21 @@ export function setHitboxAngle(hitbox: Hitbox, angle: number): void {
    hitbox.previousRelativeAngle += add;
 
    const renderObject = getEntityRenderObject(hitbox.entity);
-   registerDirtyRenderObject(hitbox.entity, renderObject);
+   markDirtyRenderObject(renderObject);
 }
 
-/** Makes the hitboxes' angle be that as specified, by only changing its relative angle */
+/** Sets a hitboxes' relative angle */
 export function setHitboxRelativeAngle(hitbox: Hitbox, angle: number): void {
-   const add = angle - hitbox.box.relativeAngle;
-   hitbox.box.relativeAngle += add;
-   hitbox.previousRelativeAngle += add;
+   // @Cleanup: epsilon out of my ass
+   if (Math.abs(angle - hitbox.box.relativeAngle) < 0.00001) {
+      return;
+   }
+   
+   hitbox.previousRelativeAngle += angle - hitbox.box.relativeAngle;
+   hitbox.box.relativeAngle = angle;
 
    const renderObject = getEntityRenderObject(hitbox.entity);
-   registerDirtyRenderObject(hitbox.entity, renderObject);
+   markDirtyRenderObject(renderObject);
 }
 
 export function applyForce(hitbox: Hitbox, forceX: number, forceY: number): void {

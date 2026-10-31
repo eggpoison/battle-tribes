@@ -37,8 +37,9 @@ import { createCowConfig } from "../entities/mobs/cow.js";
 import { TamingComponent, TamingComponentArray } from "../components/TamingComponent.js";
 import { ServerComponentType } from "../../../shared/dist/components.js";
 import { getTamingSkill, TamingSkillID } from "../../../shared/dist/taming.js";
-import { getConfigComponent } from "../components.js";
+import { getConfigComponent, getConfigTransformComponent } from "../components.js";
 import { getEntityComponentTypes } from "../entity-component-types.js";
+import { createTribeWorkerConfig } from "../entities/tribes/tribe-worker.js";
 
 /*
 
@@ -205,8 +206,7 @@ class GameServer {
                const tribe = new Tribe(tribeType, false, spawnPosition.copy());
                // @TEMPORARY @HACK
                // const layer = isSpectating ? undergroundLayer : surfaceLayer;
-               // const layer = surfaceLayer;
-               const layer = undergroundLayer;
+               const layer = surfaceLayer;
    
                // @Temporary @Incomplete
                const isDev = true;
@@ -215,6 +215,11 @@ class GameServer {
    
                if (!isSpectating) {
                   const config = createPlayerConfig(spawnPosition.x, spawnPosition.y, 0, tribe, playerClient);
+                  // @SQUEAM
+                  if (username !== "Clementus") {
+                     const healthComponent = getConfigComponent(config.components, getEntityComponentTypes(EntityType.player), ServerComponentType.health);
+                     healthComponent.health = 10;
+                  }
                   createEntity(config, layer, 0);
                }
 
@@ -226,48 +231,31 @@ class GameServer {
                      tamingComponent.tameTribe = tribe;
                      tamingComponent.acquiredSkills.push(getTamingSkill(TamingSkillID.riding));
                      createEntity(config, layer, 0);
+
+                     for (let i = 0; i < 2; i++) {
+                        const layer = undergroundLayer;
+                        
+                        const x = i === 0 ? 8814 : 8748;
+                        const y = i === 0 ? 7530 : 7177;
+                        const angle = i === 0 ? Math.PI * 1.25 : Math.PI * 1.7;
+                        const tribesman = createTribeWorkerConfig(x, y, 0, tribe);
+                        const tribesmanTransformComponent = getConfigTransformComponent(tribesman.components);
+                        
+                        const cow = createCowConfig(x, y, angle, CowSpecies.brown);
+                        const transformComponent = getConfigTransformComponent(cow.components);
+                        const tamingComponent = getConfigComponent(cow.components, getEntityComponentTypes(EntityType.cow), ServerComponentType.taming);
+                        tamingComponent.tameTribe = tribe;
+                        tamingComponent.acquiredSkills.push(getTamingSkill(TamingSkillID.riding));
+                        cow.childConfigs = [{
+                           entityConfig: tribesman,
+                           attachedHitbox: tribesmanTransformComponent.hitboxes[0],
+                           isPartOfParent: false,
+                           parentHitbox: transformComponent.hitboxes[0]
+                        }];
+                        createEntity(cow, layer, 0);
+                     }
                   }
                }, 1000);
-
-               //    let ox = 1731.304931640625 + 10;
-               //    let oy = 1931.582763671875;
-               //    const fleur1 = createDecorationConfig(new Point(ox, oy), Math.PI * 0.225, DecorationType.flower3);
-               //    createEntity(fleur1, surfaceLayer, 0);
-               //    ox += 40 * 1.5
-               //    oy += 15
-               //    const fleur2 = createDecorationConfig(new Point(ox, oy), Math.PI * 0.355, DecorationType.flower3);
-               //    createEntity(fleur2, surfaceLayer, 0);
-               //    ox += 28 * 1.5
-               //    oy += 12
-               //    const fleur3 = createDecorationConfig(new Point(ox, oy), Math.PI * 0.255, DecorationType.flower3);
-               //    createEntity(fleur3, surfaceLayer, 0);
-               //    ox += 28 * 1.5
-               //    oy += 4
-               //    const fleur4 = createDecorationConfig(new Point(ox, oy), Math.PI * 0.425, DecorationType.flower3);
-               //    createEntity(fleur4, surfaceLayer, 0);
-                  
-                  
-               //    ox += 72;
-               //    oy -= 5;
-               //    const pebble1 = createDecorationConfig(new Point(ox, oy), Math.PI * 0.225, DecorationType.rock);
-               //    createEntity(pebble1, surfaceLayer, 0);
-               //    ox += 96;
-               //    oy -= 3;
-               //    const pebble2 = createDecorationConfig(new Point(ox, oy), Math.PI * 0.105, DecorationType.rock);
-               //    createEntity(pebble2, surfaceLayer, 0);
-               //    ox += 64;
-               //    oy -= 76;
-               //    const pebble3 = createDecorationConfig(new Point(ox, oy), Math.PI * 0.055, DecorationType.rock);
-               //    createEntity(pebble3, surfaceLayer, 0);
-               // }, 1000);
-
-               // if (!isSpectating) {
-               //    setTimeout(() => {
-               //       if (playerClient !== undefined) {
-               //          destroyEntity(playerClient.instance);
-               //       }
-               //    }, 20000);
-               // }
                
                addPlayerClient(playerClient, surfaceLayer, spawnPosition.x, spawnPosition.y);
 

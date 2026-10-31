@@ -1,7 +1,7 @@
-import { LimbConfiguration, RESTING_LIMB_STATES } from "../../../../shared/dist/attack-patterns.js";
+import { LimbConfiguration, LimbState, QUIVER_PULL_LIMB_STATE, RESTING_LIMB_STATES } from "../../../../shared/dist/attack-patterns.js";
 import { createCircularBox, HitboxCollisionType, CircularBox, HitboxTag, setBoxFlipX } from "../../../../shared/dist/boxes.js";
 import { CollisionBit, DEFAULT_COLLISION_MASK } from "../../../../shared/dist/collision.js";
-import { EntityType } from "../../../../shared/dist/entities.js";
+import { EntityType, LimbAction } from "../../../../shared/dist/entities.js";
 import { TribeType, TRIBE_INFO_RECORD } from "../../../../shared/dist/tribes.js";
 import { rotatePoint } from "../../../../shared/dist/utils.js";
 import Tribe from "../../Tribe.js";
@@ -11,7 +11,7 @@ import { EntityConfig } from "../../components.js";
 import { AIHelperComponent, AIType } from "../../components/AIHelperComponent.js";
 import { HealthComponent } from "../../components/HealthComponent.js";
 import { InventoryComponent } from "../../components/InventoryComponent.js";
-import { getLimbStateOffset, InventoryUseComponent } from "../../components/InventoryUseComponent.js";
+import { getCurrentLimbState, getLimbStateOffset, InventoryUseComponent } from "../../components/InventoryUseComponent.js";
 import { StatusEffectComponent } from "../../components/StatusEffectComponent.js";
 import { addHitboxToTransformComponent, TransformComponent } from "../../components/TransformComponent.js";
 import { TribeMemberComponent } from "../../components/TribeMemberComponent.js";
@@ -21,6 +21,8 @@ import { generateTribesmanName } from "../../tribesman-names.js";
 import { TribesmanComponent } from "../../components/TribesmanComponent.js";
 import { createHitbox, setHitboxIgnoresWallCollisions, setHitboxTag } from "../../hitboxes.js";
 import { AIPathfindingComponent } from "../../components/AIPathfindingComponent.js";
+import { BowItemInfo, InventoryName, ITEM_INFO_RECORD, ItemType, QUIVER_ACCESS_TIME_TICKS, QUIVER_PULL_TIME_TICKS } from "../../../../shared/dist/items/items.js";
+import { BOW_HOLDING_LIMB_STATE } from "./player.js";
 
 const moveFunc = () => {
    throw new Error();
@@ -44,6 +46,8 @@ const getHitboxRadius = (tribeType: TribeType): number => {
    }
 }
 
+// @SQUEAM @TEMPORARY
+let A = 0;
 export function createTribeWorkerConfig(x: number, y: number, angle: number, tribe: Tribe): EntityConfig {
    const transformComponent = new TransformComponent();
 
@@ -79,7 +83,10 @@ export function createTribeWorkerConfig(x: number, y: number, angle: number, tri
 
    const tribeComponent = new TribeComponent(tribe);
 
-   const tribeMemberComponent = new TribeMemberComponent(generateTribesmanName(tribe.tribeType));
+   // @SQUEAM
+   // const tribeMemberComponent = new TribeMemberComponent(generateTribesmanName(tribe.tribeType));
+   const name = A++ === 0 ? "Chlamydia" : "Claymation"
+   const tribeMemberComponent = new TribeMemberComponent(name);
 
    const tribesmanComponent = new TribesmanComponent();
    
@@ -96,6 +103,32 @@ export function createTribeWorkerConfig(x: number, y: number, angle: number, tri
 
    const inventoryUseComponent = new InventoryUseComponent();
 
+   // @SQUEAM
+   setTimeout(() => {
+
+      const holdingLimb = inventoryUseComponent.getLimbInfo(InventoryName.hotbar);
+      const startHoldingLimbState = getCurrentLimbState(holdingLimb);
+      
+      holdingLimb.action = LimbAction.engageBow;
+      holdingLimb.currentActionElapsedTicks = 0;
+      holdingLimb.currentActionDurationTicks = QUIVER_ACCESS_TIME_TICKS + QUIVER_PULL_TIME_TICKS;
+      holdingLimb.currentActionRate = 1;
+      holdingLimb.currentActionStartLimbState = startHoldingLimbState;
+      holdingLimb.currentActionEndLimbState = BOW_HOLDING_LIMB_STATE;
+
+      // Meanwhile the drawing limb pulls an arrow out
+      
+      const drawingLimb = inventoryUseComponent.getLimbInfo(InventoryName.offhand);
+      const startDrawingLimbState = getCurrentLimbState(drawingLimb);
+      
+      drawingLimb.action = LimbAction.moveLimbToQuiver;
+      drawingLimb.currentActionElapsedTicks = 0;
+      drawingLimb.currentActionDurationTicks = QUIVER_ACCESS_TIME_TICKS;
+      drawingLimb.currentActionRate = 1;
+      drawingLimb.currentActionStartLimbState = startDrawingLimbState;
+      drawingLimb.currentActionEndLimbState = QUIVER_PULL_LIMB_STATE;
+   }, 500);
+   
    return {
       entityType: EntityType.tribeWorker,
       components: [

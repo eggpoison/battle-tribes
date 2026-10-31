@@ -48,16 +48,8 @@ export function generateCaveEntrances(surfaceLayer: Layer, biomeDists: Uint8Arra
 
       const originTileX = getTileX(originTile);
       const originTileY = getTileY(originTile);
-      // @Temporary
-      let originX = (originTileX + Math.random()) * Settings.TILE_SIZE;
-      let originY = (originTileY + Math.random()) * Settings.TILE_SIZE;
-      // if (first) {
-      //    originX = Settings.WORLD_UNITS * 0.5 + 600;
-      //    originY = Settings.WORLD_UNITS * 0.5;
-      //    first = false;
-      // } else {
-      //    continue;
-      // }
+      const originX = (originTileX + Math.random()) * Settings.TILE_SIZE;
+      const originY = (originTileY + Math.random()) * Settings.TILE_SIZE;
 
       const caveDirection = randAngle();
 

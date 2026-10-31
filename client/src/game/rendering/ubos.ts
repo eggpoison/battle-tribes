@@ -74,11 +74,11 @@ export function createUBOs(): void {
    // @Memory: Could pack even tighter if I fit into one 32-bit uint instead of effectively 48 bits of data per. 9 bits for width, 9 bits for height, 14 for slot index. That would also be far faster to fill with the initial data
 
    const textureAtlas = getEntityTextureAtlasInfo();
-   const textureSources = textureAtlas.textureSources;
+   const numTextures = textureAtlas.numTextures;
 
    // @HACK
    if ((entityTextureAtlasData as Uint32Array | undefined) === undefined) {
-      entityTextureAtlasData = new Uint32Array(4 + Math.ceil(textureSources.length / 8) * 4 + Math.ceil(textureSources.length / 4) * 4);
+      entityTextureAtlasData = new Uint32Array(4 + Math.ceil(numTextures / 8) * 4 + Math.ceil(numTextures / 4) * 4);
    }
 
    let offset = 0;
@@ -87,7 +87,7 @@ export function createUBOs(): void {
 
    offset += 4;
 
-   for (let i = 0; i < textureSources.length / 8; i++) {
+   for (let i = 0; i < numTextures / 8; i++) {
       const iOffset = i * 8;
 
       entityTextureAtlasData[offset] = textureAtlas.textureSlotIndexes[iOffset] | textureAtlas.textureSlotIndexes[iOffset + 1] << 16;
@@ -97,7 +97,7 @@ export function createUBOs(): void {
       offset += 4;
    }
 
-   for (let i = 0; i < textureSources.length / 4; i++) {
+   for (let i = 0; i < numTextures / 4; i++) {
       const iOffset = i * 4;
       
       entityTextureAtlasData[offset] = textureAtlas.textureWidths[iOffset] | textureAtlas.textureHeights[iOffset] << 16;
@@ -144,7 +144,7 @@ export function updateUBOs(): void {
    }
 
    // Update the time buffer
-   // @Bug: Should be the same as the time used in other places
+   // @Bug @Speed: Should be the same as the time used in other places
    timeData[0] = performance.now();
    gl.bindBuffer(gl.UNIFORM_BUFFER, timeBuffer);
    gl.bufferSubData(gl.UNIFORM_BUFFER, 0, timeData);

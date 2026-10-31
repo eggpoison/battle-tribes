@@ -4,7 +4,7 @@ import { getTileIndexIncludingEdges, getTileX, getTileY, TileIndex, tileIsInWorl
 import { rotatePointAroundPoint, _point, lerp, randFloat } from "../../../../../shared/src/utils";
 import { Bytes } from "../../../../../shared/src/constants";
 import { createWebGLProgram, gl } from "../../webgl";
-import { getTexture } from "../../textures";
+import { getTexture, TextureInfoCollection } from "../../textures";
 import { RenderChunkRiverInfo, getRenderChunkMaxTileX, getRenderChunkMaxTileY, getRenderChunkMinTileX, getRenderChunkMinTileY, getRenderChunkRiverInfo } from "../render-chunks";
 import { UBOBindingIndex, bindUBOToProgram } from "../ubos";
 import Layer from "../../Layer";
@@ -59,6 +59,13 @@ const riverSteppingStoneVertexCounts: number[] = [];
 let baseProgramOpacityUniformLocation: WebGLUniformLocation;
 let baseProgramIsUndergroundUniformLocation: WebGLUniformLocation;
 
+let waterBaseTexture: WebGLTexture;
+let waterRockTextures: WebGLTexture[];
+let transitionTexture: WebGLTexture;
+let gravelNoiseTexture: WebGLTexture;
+let riverBedHighlightTextures: WebGLTexture[];
+let waterNoiseTexture: WebGLTexture;
+
 // @INCOMPLETE: All the stepping stone stuff!
 
 // @SQUEAM
@@ -100,7 +107,7 @@ let baseProgramIsUndergroundUniformLocation: WebGLUniformLocation;
 //    }
 // }
 
-export function createRiverShaders(): void {
+export function createRiverShaders(textureInfoCollection: TextureInfoCollection): void {
    // Base shaders
    
    const baseVertexShaderText = `#version 300 es
@@ -738,10 +745,36 @@ export function createRiverShaders(): void {
    gl.uniform1i(steppingStoneTexture1UniformLocation, 0);
    gl.uniform1i(steppingStoneTexture2UniformLocation, 1);
    gl.uniform1i(steppingStoneTexture3UniformLocation, 2);
+
+   waterBaseTexture = getTexture(textureInfoCollection, "miscellaneous/river/water-base.png");
+
+   waterRockTextures = [];
+   for (let rockSize: WaterRockSize = 0; rockSize < 2; rockSize++) {
+      const textureSource = WATER_ROCK_TEXTURES[rockSize];
+      const texture = getTexture(textureInfoCollection, textureSource);
+      waterRockTextures.push(texture);
+   }
+
+   transitionTexture = getTexture(textureInfoCollection, "miscellaneous/river/gravel.png");
+
+   gravelNoiseTexture = getTexture(textureInfoCollection, "miscellaneous/gravel-noise-texture.png");
+
+   riverBedHighlightTextures = [];
+   for (let i = 0; i < 3; i++) {
+      const texture = getTexture(textureInfoCollection, `miscellaneous/river/river-bed-highlights-${i + 1}.png`);
+      riverBedHighlightTextures.push(texture);
+   }
+
+   waterNoiseTexture = getTexture(textureInfoCollection, "miscellaneous/river/water-noise.png");
 }
 
 const tileIsWaterInt = (layer: Layer, tileX: number, tileY: number): number => {
    if (!tileIsInWorldIncludingEdges(tileX, tileY)) {
+      return 0;
+   }
+
+   // @HACK!!!
+   if (!layer.hasTileXY(tileX, tileY)) {
       return 0;
    }
    
@@ -757,7 +790,13 @@ const tileBordersWater = (layer: Layer, tileX: number, tileY: number): boolean =
 
       if (tileIsInWorldIncludingEdges(neighbourTileX, neighbourTileY)) {
          const tileIndex = getTileIndexIncludingEdges(neighbourTileX, neighbourTileY);
-         const neighbourTile = layer.tiles.get(tileIndex)!;
+         const neighbourTile = layer.tiles.get(tileIndex);
+
+         // @HACK!!
+         if (neighbourTile === undefined) {
+            continue;
+         }
+         
          if (neighbourTile.type === TileType.water) {
             return true;
          }
@@ -1736,9 +1775,8 @@ export function renderLowerRiverFeatures(layer: Layer, visibleRenderChunks: read
    gl.uniform1f(baseProgramIsUndergroundUniformLocation, layer === undergroundLayer ? 1 : 1);
 
    // Bind water base texture
-   const baseTexture = getTexture("miscellaneous/river/water-base.png");
    gl.activeTexture(gl.TEXTURE0);
-   gl.bindTexture(gl.TEXTURE_2D, baseTexture);
+   gl.bindTexture(gl.TEXTURE_2D, waterBaseTexture);
 
    for (const renderChunkInfo of visibleRenderChunks) {
       gl.bindVertexArray(renderChunkInfo.baseVAO);
@@ -1753,8 +1791,7 @@ export function renderLowerRiverFeatures(layer: Layer, visibleRenderChunks: read
 
    // Bind water rock textures
    for (let rockSize: WaterRockSize = 0; rockSize < 2; rockSize++) {
-      const textureSource = WATER_ROCK_TEXTURES[rockSize];
-      const texture = getTexture(textureSource);
+      const texture = waterRockTextures[rockSize];
       gl.activeTexture(gl.TEXTURE0 + rockSize);
       gl.bindTexture(gl.TEXTURE_2D, texture);
    }
@@ -1771,11 +1808,9 @@ export function renderLowerRiverFeatures(layer: Layer, visibleRenderChunks: read
    gl.useProgram(transitionProgram);
       
    // Bind transition texture
-   const transitionTexture = getTexture("miscellaneous/river/gravel.png");
    gl.activeTexture(gl.TEXTURE0);
    gl.bindTexture(gl.TEXTURE_2D, transitionTexture);
    
-   const gravelNoiseTexture = getTexture("miscellaneous/gravel-noise-texture.png");
    gl.activeTexture(gl.TEXTURE1);
    gl.bindTexture(gl.TEXTURE_2D, gravelNoiseTexture);
 
@@ -1816,9 +1851,8 @@ export function renderUpperRiverFeatures(layer: Layer, visibleRenderChunks: read
    gl.uniform1f(baseProgramIsUndergroundUniformLocation, layer === undergroundLayer ? 1 : 1);
 
    // Bind water base texture
-   const baseTexture = getTexture("miscellaneous/river/water-base.png");
    gl.activeTexture(gl.TEXTURE0);
-   gl.bindTexture(gl.TEXTURE_2D, baseTexture);
+   gl.bindTexture(gl.TEXTURE_2D, waterBaseTexture);
 
    for (const renderChunkInfo of visibleRenderChunks) {
       gl.bindVertexArray(renderChunkInfo.baseVAO);
@@ -1831,17 +1865,11 @@ export function renderUpperRiverFeatures(layer: Layer, visibleRenderChunks: read
 
    gl.useProgram(highlightsProgram);
 
-   const texture1 = getTexture("miscellaneous/river/river-bed-highlights-1.png");
-   gl.activeTexture(gl.TEXTURE0);
-   gl.bindTexture(gl.TEXTURE_2D, texture1);
-
-   const texture2 = getTexture("miscellaneous/river/river-bed-highlights-2.png");
-   gl.activeTexture(gl.TEXTURE1);
-   gl.bindTexture(gl.TEXTURE_2D, texture2);
-
-   const texture3 = getTexture("miscellaneous/river/river-bed-highlights-3.png");
-   gl.activeTexture(gl.TEXTURE2);
-   gl.bindTexture(gl.TEXTURE_2D, texture3);
+   for (let i = 0; i < 3; i++) {
+      const texture = riverBedHighlightTextures[i];
+      gl.activeTexture(gl.TEXTURE0 + i);
+      gl.bindTexture(gl.TEXTURE_2D, texture);
+   }
    
    for (const renderChunkRiverInfo of visibleRenderChunks) {
       gl.bindVertexArray(renderChunkRiverInfo.highlightsVAO);
@@ -1854,9 +1882,8 @@ export function renderUpperRiverFeatures(layer: Layer, visibleRenderChunks: read
    
    gl.useProgram(noiseProgram);
                
-   const noiseTexture = getTexture("miscellaneous/river/water-noise.png");
    gl.activeTexture(gl.TEXTURE0);
-   gl.bindTexture(gl.TEXTURE_2D, noiseTexture);
+   gl.bindTexture(gl.TEXTURE_2D, waterNoiseTexture);
 
    for (const renderChunkInfo of visibleRenderChunks) {
       gl.bindVertexArray(renderChunkInfo.noiseVAO);

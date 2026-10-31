@@ -41,7 +41,7 @@ export function createTechTreeItem(itemType: ItemType, position: Point): void {
 
 export function createTechTreeItemShaders(): void {
    const textureAtlas = getEntityTextureAtlasInfo();
-   const textureSources = textureAtlas.textureSources;
+   const numTextures = textureAtlas.numTextures;
    
    const vertexShaderText = `#version 300 es
    precision highp float;
@@ -79,8 +79,8 @@ export function createTechTreeItemShaders(): void {
    uniform sampler2D u_textureAtlas;
    uniform float u_atlasPixelSize;
    uniform float u_atlasSlotSize;
-   uniform float u_textureSlotIndexes[${textureSources.length}];
-   uniform vec2 u_textureSizes[${textureSources.length}];
+   uniform float u_textureSlotIndexes[${numTextures}];
+   uniform vec2 u_textureSizes[${numTextures}];
    
    in vec2 v_texCoord;
    in float v_textureArrayIndex;
@@ -120,13 +120,13 @@ export function createTechTreeItemShaders(): void {
    const textureSlotIndexesUniformLocation = gl.getUniformLocation(program, "u_textureSlotIndexes")!;
    const textureSizesUniformLocation = gl.getUniformLocation(program, "u_textureSizes")!;
 
-   const textureSlotIndexes = new Float32Array(textureSources.length);
-   for (let textureArrayIndex = 0; textureArrayIndex < textureSources.length; textureArrayIndex++) {
+   const textureSlotIndexes = new Float32Array(numTextures);
+   for (let textureArrayIndex = 0; textureArrayIndex < numTextures; textureArrayIndex++) {
       textureSlotIndexes[textureArrayIndex] = textureAtlas.textureSlotIndexes[textureArrayIndex];
    }
 
-   const textureSizes = new Float32Array(textureSources.length * 2);
-   for (let textureArrayIndex = 0; textureArrayIndex < textureSources.length; textureArrayIndex++) {
+   const textureSizes = new Float32Array(numTextures * 2);
+   for (let textureArrayIndex = 0; textureArrayIndex < numTextures; textureArrayIndex++) {
       textureSizes[textureArrayIndex * 2] = textureAtlas.textureWidths[textureArrayIndex];
       textureSizes[textureArrayIndex * 2 + 1] = textureAtlas.textureHeights[textureArrayIndex];
    }

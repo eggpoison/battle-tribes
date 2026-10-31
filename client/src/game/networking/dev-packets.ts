@@ -2,8 +2,8 @@ import { SafetyNodeData } from "../../../../shared/src/ai-building-types";
 import { CircleDebugData, EntityDebugData, LineDebugData, PathData, PathfindingNodeIndex, TileHighlightData } from "../../../../shared/src/client-server-types";
 import { PacketReader } from "../../../../shared/src/packets";
 import { assert } from "../../../../shared/src/utils";
-import { hoverDebugState } from "../../ui-state/hover-debug-state";
 import { readTribeBuildingSafeties, resetBuildingSafeties } from "../building-safety";
+import { setEntityDebugData } from "../camera";
 import { updateLightLevelsFromData } from "../light-levels";
 import { updateLocalBiomesFromData } from "../local-biomes";
 import { updateTribePlanData } from "../rendering/tribe-plan-visualiser/tribe-plan-visualiser";
@@ -232,8 +232,9 @@ export function onDevGameDataPacket(reader: PacketReader): void {
    const hasDebugData = reader.readBool();
    if (hasDebugData) {
       const debugData = updateEntityDebugInfoFromPacket(reader);
-      hoverDebugState.setEntityDebugData(debugData);
+      // @GARBAGE
+      setEntityDebugData(debugData);
    } else {
-      hoverDebugState.setEntityDebugData(null);
+      setEntityDebugData(null);
    }
 }

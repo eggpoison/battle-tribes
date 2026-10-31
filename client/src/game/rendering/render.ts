@@ -1,5 +1,5 @@
 import { Settings } from "../../../../shared/src/settings";
-import { getVisibleRenderChunks, maxVisibleChunkX, maxVisibleChunkY, maxVisibleRenderChunkX, maxVisibleRenderChunkY, minVisibleChunkX, minVisibleChunkY, minVisibleRenderChunkX, minVisibleRenderChunkY, refreshCameraPosition, refreshCameraView } from "../camera";
+import { entityDebugData, getVisibleRenderChunks, maxVisibleChunkX, maxVisibleChunkY, maxVisibleRenderChunkX, maxVisibleRenderChunkY, minVisibleChunkX, minVisibleChunkY, minVisibleRenderChunkX, minVisibleRenderChunkY, refreshCameraPosition, refreshCameraView } from "../camera";
 import { getHighlightedEntity, getHighlightedRenderObject, getSelectedEntity } from "../entity-selection";
 import Layer from "../Layer";
 import { updatePlayerDirection } from "../player";
@@ -7,13 +7,13 @@ import { RenderLayer, MAX_RENDER_LAYER } from "../render-layers";
 import { beginLoadingSounds } from "../sound";
 import { createTextCanvasContext, renderText } from "../text-canvas";
 import { loadTextureAtlas } from "../texture-atlases";
-import { preloadTextureImages, loadTextures } from "../textures";
+import { loadTextures, TextureInfoCollection } from "../textures";
 import { gl, windowWidth, windowHeight, createTexture, setupWebGL } from "../webgl";
 import { layers, getCurrentLayer, entityExists, getEntityRenderObject } from "../world";
 import { renderLightLevelsText } from "./light-levels-text-rendering";
 import { clearRenderChunks, createLayerRenderChunks } from "./render-chunks";
 import { resetRenderOrder, renderNextRenderables } from "./render-loop";
-import { updateRenderPartMatrices } from "./render-part-matrices";
+import { getClientInterpEntities, getMatrixPosition, updateRenderPartMatrices } from "./render-part-matrices";
 import { createUBOs, updateUBOs } from "./ubos";
 import { createHitboxShaders, renderHitboxes } from "./webgl/box-wireframe-rendering";
 import { createBuildingBlockingTileShaders, renderBuildingBlockingTiles } from "./webgl/building-blocking-tiles-rendering";
@@ -52,12 +52,14 @@ import { createWallConnectionShaders, renderWallConnections } from "./webgl/wall
 import { createForcefieldShaders, renderForcefield } from "./webgl/world-border-forcefield-rendering";
 import { createWorldBorderShaders, renderWorldBorder } from "./webgl/world-border-rendering";
 import { playerIsHoldingPlaceableItem } from "../player-action-handling";
-import { hoverDebugState } from "../../ui-state/hover-debug-state";
 import { debugDisplayState } from "../../ui-state/debug-display-state";
 import { MenuType, getMenu, menuIsOpen } from "../../ui/menus";
 import { IntermediateInitialisationInfo } from "../networking/packet-receiving";
 import { RenderChunkVars } from "../../../../shared/src/render-chunks";
 import { nerdVisionIsVisible } from "../../ui/game/dev/NerdVision";
+import { Entity } from "../../../../shared/src/entities";
+import { CowComponentArray } from "../entity-components/server-components/CowComponent";
+import { _point } from "../../../../shared/src/utils";
 
 export let gameFramebuffer: WebGLFramebuffer;
 export let gameFramebufferTexture: WebGLTexture;
@@ -68,6 +70,7 @@ let lastTextureHeight = 0;
 
 export let hasSetupRendering = false;
 
+// LOCATION: shouldn't be render.ts
 export async function initialiseGame(intermediateInitialisationInfo: IntermediateInitialisationInfo): Promise<void> {
    if (!hasSetupRendering) {
       setupWebGL();
@@ -80,9 +83,7 @@ export async function initialiseGame(intermediateInitialisationInfo: Intermediat
       }
 
       await loadTextureAtlas();
-
-      const textureImages = preloadTextureImages();
-      await loadTextures(textureImages);
+      const textureInfoCollection = await loadTextures();
       
       // Done after creating texture atlases as the data from them is used in a ubo
       createUBOs();
@@ -90,7 +91,7 @@ export async function initialiseGame(intermediateInitialisationInfo: Intermediat
       // @Cleanup: Move to separate function
       gameFramebuffer = gl.createFramebuffer();
 
-      await createShaders();
+      await createShaders(textureInfoCollection);
       
       // Lazy load sound effects while the game is being played
       beginLoadingSounds();
@@ -104,16 +105,16 @@ export async function initialiseGame(intermediateInitialisationInfo: Intermediat
    }
 }
 
-export async function createShaders(): Promise<void> {
-   createSolidTileShaders();
-   createRiverShaders();
+export async function createShaders(textureInfoCollection: TextureInfoCollection): Promise<void> {
+   createSolidTileShaders(textureInfoCollection);
+   createRiverShaders(textureInfoCollection);
    createEntityShaders();
    await createEntityOverlayShaders();
    createWorldBorderShaders();
    createChunkBorderShaders();
    createHitboxShaders();
    createNightShaders();
-   createParticleShaders();
+   createParticleShaders(textureInfoCollection);
    createWallBorderShaders();
    createDarkeningShaders();
    createTileShadowShaders();
@@ -128,8 +129,8 @@ export async function createShaders(): Promise<void> {
    createRestrictedBuildingAreaShaders();
    createWallConnectionShaders();
    createHealingBeamShaders();
-   createGrassBlockerShaders();
-   createTileBreakProgressShaders();
+   createGrassBlockerShaders(textureInfoCollection);
+   createTileBreakProgressShaders(textureInfoCollection);
    createSubtileSupportShaders();
    createSlimeTrailShaders();
    createBuildingBlockingTileShaders();
@@ -138,15 +139,15 @@ export async function createShaders(): Promise<void> {
 
    if (__DEV__) {
       createDebugDataShaders();
-      createDebugImageShaders();
+      createDebugImageShaders(textureInfoCollection);
       createLightDebugShaders();
       setupFrameGraph();
    }
 }
 
-const renderLayer = (layer: Layer, clientInterp: number, serverInterp: number, visibleRenderChunks: readonly number[]): void => {
+const renderLayer = (layer: Layer, clientInterp: number, serverInterp: number, visibleRenderChunks: readonly number[], clientInterpEntities: Entity[]): void => {
    if (layer === getCurrentLayer()) {
-      renderText(clientInterp, serverInterp);
+      renderText();
    }
    
    resetRenderOrder();
@@ -163,7 +164,6 @@ const renderLayer = (layer: Layer, clientInterp: number, serverInterp: number, v
 
    renderTurretRange();
 
-   const entityDebugData = hoverDebugState.entityDebugData;
    if (nerdVisionIsVisible() && entityDebugData !== null && entityExists(entityDebugData.entity)) {
       renderTriangleDebugData(entityDebugData);
    }
@@ -197,7 +197,6 @@ const renderLayer = (layer: Layer, clientInterp: number, serverInterp: number, v
 
    // Render walls
    renderSolidTiles(layer, true);
-   // @TEMPORARY
    renderTileShadows(layer, TileShadowType.wall);
    renderMithrilRichTileOverlays(layer, true);
    renderTileBreakProgress(layer);
@@ -212,12 +211,12 @@ const renderLayer = (layer: Layer, clientInterp: number, serverInterp: number, v
       const selectedEntity = getSelectedEntity();
       if (selectedEntity !== null) {
          const renderObject = getEntityRenderObject(selectedEntity);
-         renderEntitySelection(renderObject, clientInterp, serverInterp, true);
+         renderEntitySelection(renderObject, clientInterp, serverInterp, clientInterpEntities, true);
       }
       const renderObject = getHighlightedRenderObject();
       const highlightedEntity = getHighlightedEntity();
       if (renderObject !== null && highlightedEntity !== selectedEntity) {
-         renderEntitySelection(renderObject, clientInterp, serverInterp, false);
+         renderEntitySelection(renderObject, clientInterp, serverInterp, clientInterpEntities, false);
       }
    }
    
@@ -276,30 +275,40 @@ export function renderGame(clientInterp: number, serverInterp: number): void {
       gl.framebufferTexture2D(gl.FRAMEBUFFER, attachmentPoint, gl.TEXTURE_2D, gameFramebufferTexture, 0);
    }
 
+   const visibleRenderChunks = getVisibleRenderChunks();
+   const clientInterpEntities = getClientInterpEntities();
+
    // Reset the framebuffer
    // @SQUEAM
-   // gl.clearColor(1, 0, 0, 1);
+   // gl.clearColor(1, 1, 1, 1);
    gl.clearColor(1, 0, 0, 1);
    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-   refreshCameraPosition(clientInterp, serverInterp);
-   refreshCameraView();
-
-   updateUBOs();
-   // Done immediately following the camera position update as the player direction is reliant on it.
-   updatePlayerDirection(clientInterp, serverInterp);
+   // Must be done before the render part matrices so that the player is up-to-date
+   updatePlayerDirection();
 
    updateRenderPartMatrices(clientInterp, serverInterp);
 
-   // Render layers
-   const visibleRenderChunks = getVisibleRenderChunks();
+   refreshCameraPosition();
+   refreshCameraView();
+
+   // Requires the camera position
+   updateUBOs();
+
+   const cow = CowComponentArray.activeEntities[0];
+   if (entityExists(cow)) {
+      const renderObject = getEntityRenderObject(cow);
+      const renderPart = renderObject.renderPartsByZIndex[0];
+      getMatrixPosition(renderPart.modelMatrix);
+   }
+
    // @Hack
    if (layers.indexOf(getCurrentLayer()) === 0) {
-      renderLayer(layers[1], clientInterp, serverInterp, visibleRenderChunks);
+      renderLayer(layers[1], clientInterp, serverInterp, visibleRenderChunks, clientInterpEntities);
       renderLayerDarkening();
-      renderLayer(layers[0], clientInterp, serverInterp, visibleRenderChunks);
+      renderLayer(layers[0], clientInterp, serverInterp, visibleRenderChunks, clientInterpEntities);
    } else {
-      renderLayer(layers[1], clientInterp, serverInterp, visibleRenderChunks);
+      renderLayer(layers[1], clientInterp, serverInterp, visibleRenderChunks, clientInterpEntities);
    }
 
    if (debugDisplayState.showSubtileSupports) {
@@ -318,8 +327,4 @@ export function renderGame(clientInterp: number, serverInterp: number): void {
       renderTechTree();
       renderTechTreeItems();
    }
-
-   // @SQUEAM
-   // gl.clearColor(0, 1, 0, 1);
-   // gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 }

@@ -4,9 +4,8 @@ import { distance, rotatePointAroundOrigin, _point } from "../../../../../shared
 import { Bytes } from "../../../../../shared/src/constants";
 import { createWebGLProgram, gl } from "../../webgl";
 import { bindUBOToProgram, UBOBindingIndex } from "../ubos";
-import { entitySelectionState } from "../../../ui-state/entity-selection-state";
 import { debugDisplayState } from "../../../ui-state/debug-display-state";
-import { cursorWorldPos } from "../../camera";
+import { cursorEntity, cursorWorldPos } from "../../camera";
 
 const OCCUPIED_NODE_THICKNESS = 3;
 const OCCUPIED_NODE_FREE_THICKNESS = 4.5;
@@ -96,8 +95,8 @@ export function createSafetyNodeShaders(): void {
 }
 
 const getHighlightedNodes = (): readonly WallSideNodeData[] => {
-   const hoveredEntity = entitySelectionState.hoveredEntity;
-   if (hoveredEntity === null) {
+   const hoveredEntity = cursorEntity;
+   if (hoveredEntity === 0) {
       return [];
    }
 

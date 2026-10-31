@@ -7,6 +7,7 @@ import { cleanEntityRenderObject, getRenderPartRenderPosition } from "../render-
 import { EntityRenderObject, recalculateRenderObjectVertexData } from "../../EntityRenderObject";
 import { gameFramebuffer } from "../render";
 import { createTranslationMatrix, matrixMultiplyInPlace, overrideMatrix } from "../matrices";
+import { Entity } from "../../../../../shared/src/entities";
 
 let renderProgram: WebGLProgram;
 
@@ -137,7 +138,7 @@ const translateEntityRenderParts = (renderObject: EntityRenderObject, tx: number
    }
 }
 
-export function renderEntitySelection(renderObject: EntityRenderObject, clientInterp: number, serverInterp: number, isSelected: boolean): void {
+export function renderEntitySelection(renderObject: EntityRenderObject, clientInterp: number, serverInterp: number, clientInterpEntities: Entity[], isSelected: boolean): void {
    // 
    // Framebuffer Program
    // 
@@ -169,49 +170,49 @@ export function renderEntitySelection(renderObject: EntityRenderObject, clientIn
    translateEntityRenderParts(renderObject, 4, 0);
    recalculateRenderObjectVertexData(renderObject);
    renderEntity(renderObject);
-   cleanEntityRenderObject(renderObject, clientInterp, serverInterp);
+   cleanEntityRenderObject(renderObject, clientInterp, serverInterp, clientInterpEntities);
 
    // Left
    translateEntityRenderParts(renderObject, -4, 0);
    recalculateRenderObjectVertexData(renderObject);
    renderEntity(renderObject);
-   cleanEntityRenderObject(renderObject, clientInterp, serverInterp);
+   cleanEntityRenderObject(renderObject, clientInterp, serverInterp, clientInterpEntities);
 
    // Top
    translateEntityRenderParts(renderObject, 0, 4);
    recalculateRenderObjectVertexData(renderObject);
    renderEntity(renderObject);
-   cleanEntityRenderObject(renderObject, clientInterp, serverInterp);
+   cleanEntityRenderObject(renderObject, clientInterp, serverInterp, clientInterpEntities);
 
    // Bottom
    translateEntityRenderParts(renderObject, 0, -4);
    recalculateRenderObjectVertexData(renderObject);
    renderEntity(renderObject);
-   cleanEntityRenderObject(renderObject, clientInterp, serverInterp);
+   cleanEntityRenderObject(renderObject, clientInterp, serverInterp, clientInterpEntities);
 
    // Top right
    translateEntityRenderParts(renderObject, 4, 4);
    recalculateRenderObjectVertexData(renderObject);
    renderEntity(renderObject);
-   cleanEntityRenderObject(renderObject, clientInterp, serverInterp);
+   cleanEntityRenderObject(renderObject, clientInterp, serverInterp, clientInterpEntities);
 
    // Bottom right
    translateEntityRenderParts(renderObject, 4, -4);
    recalculateRenderObjectVertexData(renderObject);
    renderEntity(renderObject);
-   cleanEntityRenderObject(renderObject, clientInterp, serverInterp);
+   cleanEntityRenderObject(renderObject, clientInterp, serverInterp, clientInterpEntities);
 
    // Bottom left
    translateEntityRenderParts(renderObject, -4, -4);
    recalculateRenderObjectVertexData(renderObject);
    renderEntity(renderObject);
-   cleanEntityRenderObject(renderObject, clientInterp, serverInterp);
+   cleanEntityRenderObject(renderObject, clientInterp, serverInterp, clientInterpEntities);
 
    // Top left
    translateEntityRenderParts(renderObject, -4, 4);
    recalculateRenderObjectVertexData(renderObject);
    renderEntity(renderObject);
-   cleanEntityRenderObject(renderObject, clientInterp, serverInterp);
+   cleanEntityRenderObject(renderObject, clientInterp, serverInterp, clientInterpEntities);
 
    // Then, we want to subtract the middle area. To do this we multiply the existing drawn pixels
    // (dfactor) by 1 minus the middle alpha.

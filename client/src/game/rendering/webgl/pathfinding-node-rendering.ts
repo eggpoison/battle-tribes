@@ -7,8 +7,8 @@ import { bindUBOToProgram, UBOBindingIndex } from "../ubos";
 import { entityExists } from "../../world";
 import { TransformComponentArray } from "../../entity-components/server-components/TransformComponent";
 import { debugDisplayState } from "../../../ui-state/debug-display-state";
-import { hoverDebugState } from "../../../ui-state/hover-debug-state";
 import { nerdVisionIsVisible } from "../../../ui/game/dev/NerdVision";
+import { entityDebugData } from "../../camera";
 
 enum NodeType {
    occupied,
@@ -144,7 +144,7 @@ const addConnector = (vertices: number[], startX: number, startY: number, endX: 
 }
 
 const renderConnectors = (pathData: PathData): void => {
-   const debugEntity = hoverDebugState.entityDebugData!.entity;
+   const debugEntity = entityDebugData!.entity;
    if (!entityExists(debugEntity)) {
       return;
    }
@@ -264,8 +264,6 @@ const addNodeData = (vertexData: Float32Array, segmentIdx: number, node: Pathfin
 }
 
 export function renderPathfindingNodes(): void {
-   const entityDebugData = hoverDebugState.entityDebugData;
-
    const showEntityPathfindingNodes = nerdVisionIsVisible() && entityDebugData !== null && entityExists(entityDebugData.entity);
    if (!debugDisplayState.showPathfindingNodes && !showEntityPathfindingNodes) {
       return;
@@ -294,7 +292,7 @@ export function renderPathfindingNodes(): void {
          }
       }
    
-      if (showEntityPathfindingNodes) {
+      if (showEntityPathfindingNodes && entityDebugData !== null) {
          const pathData = entityDebugData.pathData;
          if (pathData !== undefined) {
             for (const node of pathData.visitedNodes) {

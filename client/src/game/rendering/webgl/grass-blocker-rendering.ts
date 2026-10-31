@@ -2,7 +2,7 @@ import { boxIsCircular } from "../../../../../shared/src/boxes";
 import { rotatePointAroundOrigin, _point } from "../../../../../shared/src/utils";
 import { Bytes } from "../../../../../shared/src/constants";
 import { createTexture, createWebGLProgram, getCirclePoint, gl, windowHeight, windowWidth } from "../../webgl";
-import { getTexture } from "../../textures";
+import { getTexture, TextureInfoCollection } from "../../textures";
 import { bindUBOToProgram, UBOBindingIndex } from "../ubos";
 import { getGrassBlockers, GrassBlocker } from "../../grass-blockers";
 import { gameFramebuffer } from "../render";
@@ -20,7 +20,9 @@ let lastTextureHeight = 0;
 
 let framebufferVertexData: Float32Array;
 
-export function createGrassBlockerShaders(): void {
+let dirtTexture: WebGLTexture;
+
+export function createGrassBlockerShaders(textureInfoCollection: TextureInfoCollection): void {
    const framebufferVertexShaderText = `#version 300 es
    precision mediump float;
    
@@ -240,6 +242,8 @@ export function createGrassBlockerShaders(): void {
       1, 1
    ];
    framebufferVertexData = new Float32Array(framebufferVertices);
+
+   dirtTexture = getTexture(textureInfoCollection, "tiles/dirt2.png");
 }
 
 export function calculateGrassBlockerVertexData(grassBlocker: GrassBlocker): Float32Array {
@@ -370,7 +374,7 @@ export function renderGrassBlockers(): void {
    gl.bindTexture(gl.TEXTURE_2D, frameBufferTexture);
 
    gl.activeTexture(gl.TEXTURE1);
-   gl.bindTexture(gl.TEXTURE_2D, getTexture("tiles/dirt2.png"));
+   gl.bindTexture(gl.TEXTURE_2D, dirtTexture);
 
    gl.drawArrays(gl.TRIANGLES, 0, 6);
 

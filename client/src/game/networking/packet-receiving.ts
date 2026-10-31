@@ -1,7 +1,7 @@
 import { PacketReader } from "../../../../shared/src/packets";
 import { RiverFlowDirectionsRecord, WaterRockData, WaterRockSize } from "../../../../shared/src/client-server-types";
 import { Settings } from "../../../../shared/src/settings";
-import { getTileIndexIncludingEdges, getTileX, getTileY, TileIndex, TileType } from "../../../../shared/src/tiles";
+import { getTileIndexIncludingEdges, TileIndex, TileType } from "../../../../shared/src/tiles";
 import { Biome } from "../../../../shared/src/biomes";
 import { InventoryName } from "../../../../shared/src/items/items";
 import { AttackVar } from "../../../../shared/src/attack-patterns";
@@ -18,7 +18,7 @@ import { getSelectedItemInfo } from "../player-action-handling";
 import { playerActionState } from "../../ui-state/player-action-state";
 import { registerEntityComponentTypesFromData } from "../entity-components/component-types";
 import { addMessageToChat } from "../../ui/game/Chat";
-import { RenderChunkEdgeInfo, EdgeType, addTileToEdgeInfos, addSubtileToEdgeInfosPartial } from "../rendering/render-chunks";
+import { RenderChunkEdgeInfo, EdgeType, addSubtileToEdgeInfosPartial, addTileToEdgeInfosPartial } from "../rendering/render-chunks";
 import { getSubtileIndex, SubtileIndex } from "../../../../shared/src/subtiles";
 import { assert } from "../../../../shared/src/utils";
 
@@ -34,10 +34,6 @@ export interface IntermediateInitialisationInfo {
 export function addTileToWorld(tileType: TileType, tileBiome: Biome, flowDirection: number, temperature: number, humidity: number, mithrilRichness: number, tileIndex: number, tiles: Map<TileIndex, Tile>, dropdownEdgeInfos: Map<number, RenderChunkEdgeInfo>, flowDirections: RiverFlowDirectionsRecord, tileTemperatures: Map<TileIndex, number>, tileHumidities: Map<TileIndex, number>, dropdownTiles: TileIndex[]): void {
    const tile = new Tile(tileType, tileBiome, mithrilRichness);
    tiles.set(tileIndex, tile);
-
-   const tileX = getTileX(tileIndex);
-   const tileY = getTileY(tileIndex);
-   addTileToEdgeInfos(tiles, dropdownEdgeInfos, tileIndex, tileX, tileY, tileType);
 
    if (flowDirections[tileIndex] === undefined) {
       flowDirections[tileIndex] = flowDirection;
@@ -111,6 +107,9 @@ export function processInitialGameDataPacket(reader: PacketReader): Intermediate
    const minSubtileY = minTileY * 4;
    const maxSubtileY = (maxTileY + 1) * 4 - 1;
 
+   // @HACK! @Garbage @Speed
+   const uselessRenderChunks = new Set<number>();
+
    for (let i = 0; i < numLayers; i++) {
       const floorEdgeInfos = new Map<number, RenderChunkEdgeInfo>();
       const wallEdgeInfos = new Map<number, RenderChunkEdgeInfo>();
@@ -138,6 +137,7 @@ export function processInitialGameDataPacket(reader: PacketReader): Intermediate
             const mithrilRichness = reader.readNumber();
             
             addTileToWorld(tileType, tileBiome, flowDirection, temperature, humidity, mithrilRichness, tileIndex, tiles, dropdownEdgeInfos, flowDirections, tileTemperatures, tileHumidities, dropdownTiles);
+            addTileToEdgeInfosPartial(tiles, dropdownEdgeInfos, tileIndex, tileType, uselessRenderChunks);
          }
       }
 
@@ -149,7 +149,7 @@ export function processInitialGameDataPacket(reader: PacketReader): Intermediate
             const data = reader.readNumber();
 
             wallSubtileDatas.set(subtileIndex, data);
-            addSubtileToEdgeInfosPartial(wallSubtileDatas, floorEdgeInfos, wallEdgeInfos, subtileIndex, subtileX, subtileY, data);
+            addSubtileToEdgeInfosPartial(wallSubtileDatas, floorEdgeInfos, wallEdgeInfos, subtileIndex, data, uselessRenderChunks);
          }
       }
 

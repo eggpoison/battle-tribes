@@ -469,7 +469,7 @@ const createInteractRenderObject = (interactAction: InteractAction): EntityRende
       case InteractActionType.mountCarrySlot: {
          const transformComponent = TransformComponentArray.getComponent(interactAction.interactEntity);
          
-         const renderObject = new EntityRenderObject(0, 0, 0, 1, true);
+         const renderObject = new EntityRenderObject(0, 0, 0, 1);
 
          const rideableComponent = RideableComponentArray.getComponent(interactAction.interactEntity);
          const carrySlot = rideableComponent.carrySlots[interactAction.carrySlotIdx];

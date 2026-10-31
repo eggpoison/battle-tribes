@@ -1,76 +1,43 @@
-import { assert, assertMsg } from "../../../shared/src/utils";
+import { assert } from "../../../shared/src/utils";
 import { gl } from "./webgl";
 import { imageIsLoaded } from "./utils";
-import { FLOOR_TILE_TEXTURE_SOURCE_RECORD, WALL_TILE_TEXTURE_SOURCE_RECORD } from "./rendering/webgl/solid-tile-rendering";
-import { BREAK_PROGRESS_TEXTURE_SOURCES } from "./rendering/webgl/tile-break-progress-rendering";
 
-// @HACK: this just imports everythign..... slow... prolly some i dont need.
-// @SPEED: do the same thing in texture-atlases!!
-const itemImages = import.meta.glob("/src/images/**/*", { eager: true, query: "?url", import: "default" });
+export interface TextureInfoCollection {
+   readonly textureImageRecord: Record<string, HTMLImageElement>;
+   readonly textureRecord: Record<string, WebGLTexture>;
+}
 
-const TEXTURES: Record<string, WebGLTexture> = {};
+export async function loadTextures(): Promise<TextureInfoCollection> {
+   const textureSources = import.meta.glob([
+      "/src/images/tiles/*",
+      "/src/images/miscellaneous/river/*",
+      "/src/images/miscellaneous/particle-texture-atlas.png",
+      "/src/images/miscellaneous/gravel-noise-texture.png",
+      "/src/images/miscellaneous/tile-break-progress-1.png",
+      "/src/images/miscellaneous/tile-break-progress-2.png",
+      // @SPEED: Don't want this is production...
+      "/src/images/debug/spring.png"
+   ], { eager: true, query: "?url", import: "default" });
 
-const miscTextureSources: string[] = [
-   "miscellaneous/river/gravel.png",
-   "miscellaneous/river/water-rock-large.png",
-   "miscellaneous/river/water-rock-small.png",
-   "miscellaneous/river/water-base.png",
-   "miscellaneous/river/water-noise.png",
-   "miscellaneous/river/water-foam.png",
-   "miscellaneous/river/river-bed-highlights-1.png",
-   "miscellaneous/river/river-bed-highlights-2.png",
-   "miscellaneous/river/river-bed-highlights-3.png",
-   "miscellaneous/particle-texture-atlas.png",
-   "miscellaneous/gravel-noise-texture.png",
-   // @Temporary
-   "tiles/dirt2.png",
-   "debug/spring.png"
-];
-
-// @Hack. remove
-export const TEXTURE_IMAGE_RECORD: Record<string, HTMLImageElement> = {};
-
-export function preloadTextureImages(): HTMLImageElement[] {
-   // Add floor tile textures
-   for (const textureSource of Object.values(FLOOR_TILE_TEXTURE_SOURCE_RECORD)) {
-      if (textureSource !== null && !miscTextureSources.includes(textureSource)) {
-         miscTextureSources.push(textureSource);
-      }
-   }
-   for (const textureSource of Object.values(WALL_TILE_TEXTURE_SOURCE_RECORD)) {
-      if (!miscTextureSources.includes(textureSource)) {
-         miscTextureSources.push(textureSource);
-      }
-   }
-   for (const textureSource of BREAK_PROGRESS_TEXTURE_SOURCES) {
-      if (!miscTextureSources.includes(textureSource)) {
-         miscTextureSources.push(textureSource);
-      }
-   }
-
-   const images: HTMLImageElement[] = [];
-   for (let i = 0; i < miscTextureSources.length; i++) {
-      const textureSource = miscTextureSources[i];
-      const texture = itemImages["/src/images/" + textureSource] as string;
-      assert(texture);
+   // Preload all the texture images
+   // @INCOMPLETE: This isn't actually doing anything, as there is no work between...
+   const textureImageRecord: Record<string, HTMLImageElement> = {};
+   for (const [textureSource, src] of Object.entries(textureSources)) {
+      assert(typeof src === "string");
       
       const image = new Image();
-      image.src = texture;
-      images.push(image);
+      image.src = src;
+      textureImageRecord[textureSource] = image;
    }
-   return images;
-} 
 
-export async function loadTextures(textureImages: HTMLImageElement[]): Promise<void> {
-   // Create textures after all images are loaded
-   for (let i = 0; i < textureImages.length; i++) {
-      const image = textureImages[i];
+   // Create textures
+   const textureRecord: Record<string, WebGLTexture> = {};
+   for (const textureSource of Object.keys(textureSources)) {
+      const image = textureImageRecord[textureSource];
       if (image.width === 0) {
          console.warn("Have to wait for texture in loadTextures!!!! Need to add more padding time in-between.");
          await imageIsLoaded(image);
       }
-      
-      const textureSource = miscTextureSources[i];
       
       const texture = gl.createTexture();
       gl.bindTexture(gl.TEXTURE_2D, texture);
@@ -84,12 +51,21 @@ export async function loadTextures(textureImages: HTMLImageElement[]): Promise<v
       gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
       gl.bindTexture(gl.TEXTURE_2D, null);
 
-      TEXTURES[textureSource] = texture;
-      TEXTURE_IMAGE_RECORD[textureSource] = image;
+      textureRecord[textureSource] = texture;
    }
+
+   return {
+      textureImageRecord,
+      textureRecord
+   };
 }
 
-export function getTexture(textureSource: string): WebGLTexture {
-   assertMsg(TEXTURES[textureSource], `Couldn't find texture with source '${textureSource}'`);
-   return TEXTURES[textureSource];
+export function getTextureImage(textureInfoCollection: TextureInfoCollection, textureSource: string): HTMLImageElement {
+   assert(textureInfoCollection.textureImageRecord["/src/images/" + textureSource]);
+   return textureInfoCollection.textureImageRecord["/src/images/" + textureSource];
+}
+
+export function getTexture(textureInfoCollection: TextureInfoCollection, textureSource: string): WebGLTexture {
+   assert(textureInfoCollection.textureRecord["/src/images/" + textureSource]);
+   return textureInfoCollection.textureRecord["/src/images/" + textureSource];
 }

@@ -2,7 +2,7 @@ import { Settings } from "../../../../../shared/src/settings";
 import { lerp } from "../../../../../shared/src/utils";
 import { createWebGLProgram, gl } from "../../webgl";
 import ObjectBufferContainer from "../ObjectBufferContainer";
-import { getTexture } from "../../textures";
+import { getTexture, TextureInfoCollection } from "../../textures";
 import Particle from "../../Particle";
 import { UBOBindingIndex, bindUBOToProgram } from "../ubos";
 
@@ -33,6 +33,8 @@ export let highTexturedBufferContainer: ObjectBufferContainer;
 
 let monocolourProgram: WebGLProgram;
 let texturedProgram: WebGLProgram;
+
+let particleAtlasTexture: WebGLTexture;
 
 export const tempFloat32ArrayLength1 = new Float32Array(1);
 export const tempFloat32ArrayLength2 = new Float32Array(2);
@@ -86,7 +88,7 @@ export function updateParticles(): void {
    updateParticleArray(highTexturedParticles, highTexturedBufferContainer);
 }
 
-export function createParticleShaders(): void {
+export function createParticleShaders(textureInfoCollection: TextureInfoCollection): void {
    const monocolourVertexShaderText = `#version 300 es
    precision mediump float;
    
@@ -429,6 +431,8 @@ export function createParticleShaders(): void {
 
    gl.useProgram(texturedProgram);
    gl.uniform1i(texturedTextureUniformLocation, 0);
+
+   particleAtlasTexture = getTexture(textureInfoCollection, "miscellaneous/particle-texture-atlas.png");
 }
 
 // @Cleanup: a bunch of the code in these functions are the same
@@ -723,8 +727,7 @@ export function renderTexturedParticles(renderLayer: ParticleRenderLayer): void 
    gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
 
    gl.activeTexture(gl.TEXTURE0);
-   const texture = getTexture("miscellaneous/particle-texture-atlas.png");
-   gl.bindTexture(gl.TEXTURE_2D, texture);
+   gl.bindTexture(gl.TEXTURE_2D, particleAtlasTexture);
 
    gl.bindVertexArray(null);
 
